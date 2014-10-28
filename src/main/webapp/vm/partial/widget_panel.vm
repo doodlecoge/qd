@@ -1,0 +1,120 @@
+#* @vtlvariable name="types"     type="java.util.List<com.webex.qd.widget.WidgetType>" *#
+<style type="text/css">
+    ul.widget_panel {
+        padding: 0;
+        margin: 0;
+        letter-spacing: -4px;
+        word-spacing: -4px;
+        font-size: 0;
+    }
+
+    ul.widget_panel li {
+        letter-spacing: normal;
+        word-spacing: normal;
+        font-size: 12px;
+
+        list-style: none;
+        width: 23%;
+        height: 120px;
+        border: 1px solid #888;
+        vertical-align: top;
+        padding: 3px;
+        margin-left: 6px;
+        margin-top: 2px;
+
+    }
+
+    ul.widget_panel li .name {
+        font-weight: bold;
+        font-size: 14px;
+        height: 32px;
+        color: #4183c4;
+    }
+
+    .widget_panel .right_btn {
+        float: right;
+        line-height: 20px;
+        border: 1px outset;
+        background: -webkit-gradient(linear, left top, left bottom, from(#E7E7E7), to(#C7C7C7));
+        -webkit-border-radius: 0 !important;
+        -moz-border-radius: 0 !important;
+        border-radius: 0 !important;
+    }
+
+    .widget_panel .height_92 {
+        height: 92px;
+    }
+
+    .widget_panel .desc {
+        line-height: 1.4;
+    }
+</style>
+
+<ul class="widget_panel">
+    #foreach($t in $types)
+        <li class="inline-block">
+            <div class="height_92">
+                <div class="name">$t.name</div>
+                <div class="desc">$t.description</div>
+            </div>
+            <div>
+                <a k="$t.key" n="$t.displayName" href="javascript:void(0)" class="inline-block btn01 right_btn">+ Add
+                    New</a>
+            </div>
+        </li>
+    #end
+</ul>
+
+
+<script type="text/javascript">
+    $("ul.widget_panel").find("a[k]").click(function () {
+        var _this = $(this);
+
+        var key = _this.attr('k');
+        var name = _this.attr('n');
+
+        var newWidgetId = addNewWidget(key, __DashboardId__, name);
+
+        if (newWidgetId > 0) {//now widget will be automatically added into two different div according to the height
+            if ($("#widget-place-1").find('>div').length == 0) {
+                $.fn.AddEasyWidget(generateEditableWidget(newWidgetId, name), "widget-place-1");
+            } else if ($("#widget-place-2").find('>div').length == 0) {
+                $.fn.AddEasyWidget(generateEditableWidget(newWidgetId, name), "widget-place-2");
+            } else {
+                var leftBottom = $("#widget-place-1").find(">div:last");
+                var rightBottom = $("#widget-place-2").find(">div:last");
+                if (leftBottom.position().top+leftBottom.height() <= rightBottom.position().top+rightBottom.height())
+                    $.fn.AddEasyWidget(generateEditableWidget(newWidgetId, name), "widget-place-1");
+                else
+                    $.fn.AddEasyWidget(generateEditableWidget(newWidgetId, name), "widget-place-2");
+            }
+            saveDashboardLayout(__DashboardId__);
+            hideDialog();
+            jumpToWidget(newWidgetId);
+            makeWidgetEditable(newWidgetId);
+        } else {
+            alert("widget add failure");
+        }
+    });
+    function makeWidgetEditable(widgetId){
+        $('#'+WIDGET_PREFIX+widgetId).find(".widget-editlink").click();
+    }
+    function jumpToWidget(widgetId) {
+
+        if (!(window.location && window.location.origin && window.location.pathname && WIDGET_PREFIX)) {
+            if (!WIDGET_PREFIX) {
+                return;
+            } else {  //for ie
+                var href = window.location.href;
+                var lastIndex = href.lastIndexOf('#');
+                if (lastIndex == -1) {
+                    window.location.href = href + '#' + WIDGET_PREFIX + widgetId;
+                } else {
+                    window.location.href = href.substr(0, lastIndex) + '#' + WIDGET_PREFIX + widgetId;
+                }
+            }
+        } else {
+            window.location.href = window.location.origin + window.location.pathname + '#' + WIDGET_PREFIX + widgetId;
+        }
+    }
+</script>

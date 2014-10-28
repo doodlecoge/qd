@@ -1,0 +1,250 @@
+#* @vtlvariable name="dbs"     type="java.util.List<com.webex.qd.vo.UserDashboardEntry>" *#
+#* @vtlvariable name="uid"     type="int" *#
+<style type="text/css">
+    ul.edit_db_names_panel {
+        padding: 0;
+        margin: 0;
+    }
+
+    ul.edit_db_names_panel li {
+        list-style: none;
+        height: 25px;
+        line-height: 25px;
+        border-bottom: 1px solid #ccc;
+        position: relative;
+        padding-right: 5px;
+    }
+
+    /*ul.edit_db_names_panel li a.btn01 {*/
+    ul.edit_db_names_panel li .btns {
+        position: absolute;
+        right: 0;
+        top: 6px;
+        height: 14px;
+        line-height: 14px;
+        padding: 0 5px;
+    }
+
+    ul.edit_db_names_panel li:hover {
+        background: #eee;
+    }
+
+    ul.edit_db_names_panel li span.dis {
+        color: #ccc;
+    }
+
+    #edit_cmds {
+        position: absolute;
+    }
+
+    .handle {
+        background-image: url(../images/icons.png);
+        background-repeat: no-repeat;
+        background-position: -305px -3px;
+        height: 25px;
+        line-height: 25px;
+        width: 20px;
+        cursor: move;
+    }
+
+    .ph {
+        height: 25px;
+        line-height: 25px;
+        background: #ffa;
+    }
+
+    #db_name_txt {
+        outline: none;
+        border: 0;
+        background: transparent;
+        color: #f88;
+    }
+
+    #db_name_txt_container {
+        visibility: hidden;
+    }
+</style>
+
+<div style="line-height: 30px">
+    Click Text To Edit.
+</div>
+<ul class="edit_db_names_panel">
+    #foreach($db in $dbs)
+        <li dbid="$db.id.dashboardId" uid="$db.id.userId" role="$db.role" grp="$db.dashboard.grp">
+            <span class="handle inline-block">&nbsp;</span>
+            #if($db.role == 0)
+                <span class="txt">$db.dashboard.name</span>
+            #else
+                <span class="txt dis">$db.dashboard.name</span>
+            #end
+
+            <input type="hidden" />
+
+            <span class="btns inline-block">
+                #if($db.dashboard.grp == 1 && $db.dashboard.uid == $uid)
+                    <a href="javascript:void(0)" class="btn01 arc">Manage Sub Dashboards</a>
+                #end
+
+                #if($db.dashboard.uid == $uid)
+                    <a href="javascript:void(0)" class="btn01 del">&times;</a>
+                #elseif($db.id.userId == $uid)
+                    <a href="javascript:void(0)" class="btn01 usb">&hearts;</a>
+                #end
+
+
+##                private int dbid;
+            ##    private String dbname;
+            ##    private int userrole;
+            ##    private int dbrank;
+            ##    private int userId;
+            ##    private int uid;
+            ##    private int isGrp;
+            </span>
+        </li>
+    #end
+</ul>
+
+<p>
+    <a href="javascript:void(0)" class="btn01 save_db_order">Save Order</a>
+    <span id="save_db_order_msg" style="color: #006400; font-weight: bold;"></span>
+</p>
+<div id="db_name_txt_container">
+    <input id="db_name_txt" />
+</div>
+
+<script language="javascript" type="text/javascript">
+    $("ul.edit_db_names_panel").sortable({
+        handle: ".handle",
+        cursor: "move",
+        placeholder: "ph",
+        appendTo: "parent"
+    });
+    $("ul.edit_db_names_panel").disableSelection();
+
+    $("ul.edit_db_names_panel").click(function(e) {
+        var el = $(e.target);
+
+        if(!el.hasClass('txt')) return;
+
+        if(el.parent().attr('role') != 0) return;
+
+        var _this = $(this);
+        var val = el.html();
+
+        _this.parent().find("input:hidden").val(val);
+        el.html('');
+
+        var ipt = $('#db_name_txt');
+        ipt.val(val);
+
+        ipt.insertAfter(el);
+
+        ipt.show().focus();
+
+        el.hide();
+    });
+
+    $('#db_name_txt').blur(function(e) {
+        var _this = $(this);
+
+        var li = _this.parent();
+        var txt = li.find(".txt");
+
+        txt.show().html(li.find("input:hidden").val());
+        _this.hide();
+
+    });
+
+
+    $('#db_name_txt').keypress(function(e) {
+        if( e.which != 8 && e.which != 37 && e.which != 39 && e.which != 0 && e.which != 32 && e.which != 13
+                && (e.which < 48 || e.which > 57 && e.which < 65 || e.which > 90 && e.which < 97 || e.which > 122)) {
+            return false;
+        }
+
+        if(e.which != 13) return;
+
+        var _this = $(this);
+        var val = _this.val();
+
+        val = $.trim(val);
+
+        var li = _this.parent();
+        var dbid = li.attr('dbid');
+
+        $.post('chg_db_name', {id: dbid, name: val}, function(data) {
+            var o = eval('(' + data + ')');
+
+
+            if(o.id) {
+                li.find("input:hidden").val(o.name);
+                _this.blur();
+                update_nav_bar();
+            }
+        });
+
+    });
+
+
+    $(".edit_db_names_panel").click(function(e) {
+        var el = $(e.target);
+        var grpId = el.parent().parent().attr('dbid');
+
+        if(el.hasClass('arc')) {
+            $.get('${base}/dashboard/group_manage_panel', {grpId: grpId,workspaceId:"0",type:0}, function(data) {
+                $('.content', '#dialog_cc').html(data);
+            });
+        } else if(el.hasClass('del')) {
+            if(!confirm('Delete this dashboard?')) return;
+
+            var id = el.parent().parent().attr('dbid');
+            del_db(id,function() {
+                var cont = $("#dialog_cc").find(".content");
+
+                $.get('${base}/dashboard/edit_db_names', function (data) {
+                    cont.html(data);
+                });
+            });
+
+
+        } else if(el.hasClass('usb')) {
+            if(!confirm('Unsubscribe this dashboard?')) return;
+            var id = el.parent().parent().attr('dbid');
+            unfollow(id, function() {
+                var cont = $("#dialog_cc").find(".content");
+                $.get('${base}/dashboard/edit_db_names', function (data) {
+                    cont.html(data);
+                });
+            });
+        }
+    });
+
+
+    $(".save_db_order").click(function() {
+        var order = get_db_order();
+        var ids = order.join(",");
+        save_userdashboard_orders(ids, function(){
+            $.get('${base}/dashboard/edit_db_names', function (data) {
+                var cont = $("#dialog_cc").find(".content");
+                cont.html(data);
+
+                $("#save_db_order_msg").html('Order Saved Successfully');
+
+                setTimeout(function() {
+                    $("#save_db_order_msg").html('');
+                }, 2000);
+            });
+        });
+    });
+
+    function get_db_order() {
+        var ids = [];
+
+        $("ul.edit_db_names_panel").children("li").each(function () {
+            ids.push(parseInt($(this).attr('dbid')));
+        });
+
+        return ids;
+    }
+
+</script>

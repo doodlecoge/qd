@@ -1,0 +1,7 @@
+#* @vtlvariable name="dashboards" type="java.util.List<com.webex.qd.vo.Dashboard>" *#
+
+<table>
+    #foreach($dashboard in $dashboards)
+    <tr><td><a href="${base}/dashboard/$dashboard.id">$dashboard.name</a></td></tr>
+    #end
+</table>

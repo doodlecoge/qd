@@ -1,0 +1,18 @@
+<head>
+    <script type="text/javascript" src="${base}/script/common.js"></script>
+    <script type="text/javascript" src="${base}/script/jquery172.js"></script>
+    <script type="text/javascript">
+        $(function(){
+            resize();
+        })
+    </script>
+</head>
+<body>
+<div style="display: table; height: 150px; #position: relative; overflow: hidden;width: 100%;">
+    <div style=" #position: absolute; #top: 50%;display: table-cell; vertical-align: middle; text-align: center;">
+        <div style=" #position: relative; #top: -50%; font: 11px arial,tahoma,helvetica,sans-serif;">
+            Empty widget, please do configuration.
+        </div>
+    </div>
+</div>
+</body>

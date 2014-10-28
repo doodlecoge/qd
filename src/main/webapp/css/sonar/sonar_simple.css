@@ -1,0 +1,36 @@
+a.nolink, .dashbox a, .dashbox a:visited {
+    text-decoration: none;
+}
+a, a:link, a:visited {
+    border-bottom: 0 none;
+    text-decoration: none;
+}
+a.nolink:hover, .dashbox a:hover, .dashbox a.action, .dashbox a.action:visited {
+    text-decoration: underline;
+}
+div.barchart  {
+    border: 0 none;
+    float: left;
+    margin: 0;
+    padding: 0;
+}
+div.barchart > div {
+    background-color: #4B9FD5;
+    height: 0.9em;
+}
+.dashbox  {
+    float: left;
+    padding: 0 10px 7px 0;
+    text-align: left;
+    vertical-align: top;
+}
+.big {
+    font-size: 152%;
+    font-weight: bold;
+}
+
+body,a{color:#444;}
+h1 strong,.dashbox .title,.gwt-SourcePanel .sources .msg li strong{font-weight:bold;}
+#dashboard {background: #fff}
+#dashboard .block{margin:0 0 10px 0;}
+#dashboard .widget{padding:10px;margin:0;border:1px solid #ddd;}

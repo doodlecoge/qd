@@ -1,0 +1,38 @@
+#macro(uneditableWidget $name $id)
+<div class="widget viewable closeconfirm" id="widgetid-$id">
+    <div class="widget-header">
+        <div class="widget-gradient">
+            <strong class="widget-title">$name</strong>
+        </div>
+    </div>
+    <div class="widget-editbox" widgetid=$id>
+        <iframe id="setting$id" data-original="../widget/setting/$id" src=""
+                style="width: 100%; overflow: auto; border: 0px; height: auto"
+                frameborder="0" scrolling="yes" scrollbar="auto"></iframe>
+    </div>
+    <div class="widget-content">
+        <iframe id="view$id" data-original="../widget/view/$id" src="../widget/view/$id" style="width: 100%; overflow: auto; border: 1px; height: auto"
+                frameborder="0" scrolling="yes" scrollbar="auto"></iframe>
+    </div>
+</div>
+#end
+
+
+#macro(editableWidget $name $id)
+<div class="widget movable removable editable closeconfirm" id="widgetid-$id">
+    <div class="widget-header">
+        <div class="widget-gradient">
+            <strong class="widget-title">$name</strong>
+        </div>
+    </div>
+    <div class="widget-editbox" widgetid=$id>
+        <iframe id="setting$id" data-original="../widget/setting/$id" src=""
+                style="width: 100%; overflow: auto; border: 0px; height: auto"
+                frameborder="0" scrolling="yes" scrollbar="auto"></iframe>
+    </div>
+    <div class="widget-content" widgetid=$id>
+        <iframe id="view$id" data-original="../widget/view/$id" src="../widget/view/$id" style="width: 100%; overflow: auto; border: 0px; height: auto"
+                frameborder="0" scrolling="yes" scrollbar="auto"></iframe>
+    </div>
+</div>
+#end

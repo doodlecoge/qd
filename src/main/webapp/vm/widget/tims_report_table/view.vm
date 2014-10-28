@@ -1,0 +1,160 @@
+#* @vtlvariable name="index"     type="int" *#
+#* @vtlvariable name="widget"     type="com.webex.qd.widget.IWidget" *#
+#* @vtlvariable name="setting"     type="com.webex.qd.widget.TimsReportTableWidget.Configuration" *#
+<html>
+<head>
+    <link href="${base}/css/tims/style.css" type="text/css" rel="stylesheet">
+    <style>
+        table {
+            font-size: 11px;
+        }
+
+        body {
+            margin: 0;
+        }
+
+        .tab {
+            display: inline-block;
+            height: 22px;
+            padding-left: 5px;
+            padding-right: 5px;
+            vertical-align: top;
+            background-image: url("${base}/images/tims/1.gif");
+            background-repeat: repeat-x;
+        }
+
+        .tab_s {
+            display: inline-block;
+            height: 22px;
+            padding-left: 5px;
+            padding-right: 5px;
+            vertical-align: top;
+            background-image: url("${base}/images/tims/3.gif");
+            background-repeat: repeat-x;
+        }
+
+        .tab a {
+            display: inline-block;
+            padding: 5px 5px 0;
+            height: 15px;
+            font-family: Verdana, arial;
+            font-weight: bold;
+            color: black
+        }
+
+        .tab_s a {
+            display: inline-block;
+            padding: 5px 5px 0;
+            height: 15px;
+            font-family: Verdana, arial;
+            font-weight: bold;
+            color: black
+        }
+
+        .loader {
+            vertical-align: middle;
+            margin-left: 3px;
+        }
+
+        .background-p3 {
+            background-color: #edf3fe;
+        }
+    </style>
+    <script type="text/javascript" src="${base}/script/jquery172.js"></script>
+    <script type="text/javascript" src="${base}/script/common.js"></script>
+    <script type="text/javascript">
+        function resizeView(widgetId) {
+            var ifrm = $("#view" + widgetId, parent.document);
+            var h = $("#container").outerHeight(true);
+            if (document.body.scrollWidth > $(document.body).innerWidth()) {
+                ifrm.height(h + 20);
+            } else {
+                ifrm.height(h + 1);
+            }
+        }
+
+        $(function() {
+            $(".reportPlaceHolder").each(function(index){
+                var row = $(this);
+                var timsId = $(this).attr("timsId");
+                $.get("${base}/widget/tims/table_row", {reportId : timsId}, function(html) {
+                    row.html(html);
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+<div id="container">
+<div id="content">
+    <table id="tims_report" border="0" cellspacing="1" cellpadding="3" style="table-layout:fixed;width:100%" class="border-thin">
+        <colgroup>
+            <col style="text-align: left; width: 160px;">
+                <col style="width: 50px;">
+                <col style="width: 80px;">
+                <col style="width: 80px;">
+                <col style="width: 80px;">
+                <col style="width: 90px;">
+                <col style="width: 80px;">
+                <col style="width: 85px;">
+                <col style="width: 75px;">
+                <col style="width: 80px;">
+        </colgroup>
+        <thead>
+        <tr style="background-image:url(${base}/images/tims/gradient.gif);font-weight:bold">
+            <td class="border-thin">
+                Title
+            </td>
+            <td style="text-align:center" class="border-thin">
+                Total
+            </td>
+            <td style="text-align:center" class="border-thin">
+                <img alt="" style="vertical-align:middle" src="${base}/images/tims/pending.gif">
+                Pending
+            </td>
+            <td style="text-align:center" class="border-thin">
+                <img alt="" style="vertical-align:middle" src="${base}/images/tims/blocked.gif">
+                Blocked
+            </td>
+            <td style="text-align:center" class="border-thin">
+                <img alt="" style="vertical-align:middle" src="${base}/images/tims/passed.gif">
+                Passed
+            </td>
+            <td style="text-align:center" class="border-thin">
+                <img alt="" style="vertical-align:middle" src="${base}/images/tims/passex.gif">
+                Pass w/ X
+            </td>
+            <td style="text-align:center" class="border-thin">
+                <img alt="" style="vertical-align:middle" src="${base}/images/tims/failed.gif">
+                Failed
+            </td>
+            <td style="text-align:center" class="border-thin">
+                <img alt="" style="vertical-align:middle" src="${base}/images/tims/dropped.gif">
+                Dropped
+            </td>
+            <td style="text-align:center" class="border-thin">
+                Executed
+            </td>
+            <td style="text-align:center" class="border-thin">
+                <img src="${base}/images/tims/defect.gif" style="vertical-align:middle" alt="">
+                Defects
+            </td>
+        </tr>
+        </thead>
+        <tbody>
+            #set($even = false)
+            #foreach($conf in $setting.configEntries)
+            <tr timsId="$conf.reportId" #if($even)class="reportPlaceHolder background-p3"#else class="reportPlaceHolder"#end><td colspan="10"><img  src="${base}/images/ajax-loader.gif" alt="" /></td></tr>
+                #if($even)
+                    #set($even = false)
+                #else
+                    #set($even = true)
+                #end
+            #end
+        </tbody>
+    </table>
+
+</div>
+</div>
+</body>
+</html>

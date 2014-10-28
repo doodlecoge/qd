@@ -1,0 +1,8 @@
+<html>
+<body>
+By Velocity
+    #foreach($m in $messages)
+    <h1>Message : ${m.b}</h1>
+    #end
+</body>
+</html>

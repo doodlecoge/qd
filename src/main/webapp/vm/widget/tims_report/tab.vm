@@ -1,0 +1,173 @@
+#* @vtlvariable name="data"     type="com.webex.qd.widget.TimsReportWidget.Data" *#
+#* @vtlvariable name="index"     type="int" *#
+#* @vtlvariable name="widget"     type="com.webex.qd.widget.IWidget" *#
+#if($data)
+<div style="text-align: right;">
+    <a target="_blank" href=" http://tims.cisex.com/warp.cmd?ent=$data.reportId" style="
+            background-image: url('${base}/images/tims/report.gif');
+            background-repeat: no-repeat;
+            line-height: 18px;
+            height: 18px;
+            display: inline-block;
+            padding-left: 20px;
+            vertical-align: bottom;
+            ">Open in TIMS</a></div>
+<table id="tims_report" border="0" cellspacing="1" cellpadding="3" style="table-layout:fixed;width:100%" class="border-thin">
+    <colgroup>
+        <col style="text-align: left; width: 160px;">
+        #if($data.tableSpec.containsColumn("total"))
+            <col style="width: 50px;">
+        #end
+        #if($data.tableSpec.containsColumn("pending"))
+            <col style="width: 80px;">
+        #end
+        #if($data.tableSpec.containsColumn("blocked"))
+            <col style="width: 80px;">
+        #end
+        #if($data.tableSpec.containsColumn("passed"))
+            <col style="width: 80px;">
+        #end
+        #if($data.tableSpec.containsColumn("passx"))
+            <col style="width: 90px;">
+        #end
+        #if($data.tableSpec.containsColumn("failed"))
+            <col style="width: 80px;">
+        #end
+        #if($data.tableSpec.containsColumn("dropped"))
+            <col style="width: 85px;">
+        #end
+        #if($data.tableSpec.containsColumn("executed"))
+            <col style="width: 75px;">
+        #end
+        #if($data.tableSpec.containsColumn("quality"))
+            <col style="width: 60px;">
+        #end
+        #if($data.tableSpec.containsColumn("defects"))
+            <col style="width: 80px;">
+        #end
+    </colgroup>
+    <thead>
+    <tr style="background-image:url(${base}/images/tims/gradient.gif);font-weight:bold">
+        <td class="border-thin">
+            Folders</td>
+
+        #if($data.tableSpec.containsColumn("total"))
+            <td style="text-align:center" class="border-thin">
+                Total</td>
+        #end
+
+        #if($data.tableSpec.containsColumn("pending"))
+            <td style="text-align:center" class="border-thin">
+                <img alt="" style="vertical-align:middle" src="${base}/images/tims/pending.gif">
+                Pending</td>
+        #end
+
+        #if($data.tableSpec.containsColumn("blocked"))
+            <td style="text-align:center" class="border-thin">
+                <img alt="" style="vertical-align:middle" src="${base}/images/tims/blocked.gif">
+                Blocked</td>
+        #end
+
+        #if($data.tableSpec.containsColumn("passed"))
+            <td style="text-align:center" class="border-thin">
+                <img alt="" style="vertical-align:middle" src="${base}/images/tims/passed.gif">
+                Passed</td>
+        #end
+
+        #if($data.tableSpec.containsColumn("passx"))
+            <td style="text-align:center" class="border-thin">
+                <img alt="" style="vertical-align:middle" src="${base}/images/tims/passex.gif">
+                Pass w/ X</td>
+        #end
+
+        #if($data.tableSpec.containsColumn("failed"))
+            <td style="text-align:center" class="border-thin">
+                <img alt="" style="vertical-align:middle" src="${base}/images/tims/failed.gif">
+                Failed</td>
+        #end
+
+        #if($data.tableSpec.containsColumn("dropped"))
+            <td style="text-align:center" class="border-thin">
+                <img alt="" style="vertical-align:middle" src="${base}/images/tims/dropped.gif">
+                Dropped</td>
+        #end
+
+        #if($data.tableSpec.containsColumn("executed"))
+            <td style="text-align:center" class="border-thin">
+                Executed</td>
+        #end
+
+        #if($data.tableSpec.containsColumn("quality"))
+            <td style="text-align:center" class="border-thin">
+                Quality</td>
+        #end
+
+        #if($data.tableSpec.containsColumn("defects"))
+            <td style="text-align:center" class="border-thin">
+                <img src="${base}/images/tims/defect.gif" style="vertical-align:middle" alt="">
+                Defects</td>
+        #end
+    </tr>
+    </thead>
+    <tbody>
+        #set($even = false)
+        #foreach($id in $data.tableSpec.startingContext.get(0).iD)
+            #set($resultSummary = $data.getResultSummary($id.value))
+
+        <tr style="vertical-align:top" #if($even)class=".background-p3"#end >
+            <td style="text-overflow: ellipsis;overflow: hidden" class="tims_id">
+                <img style="vertical-align:middle;margin-right:3px;" alt="" src="${base}/images/tims/folder.gif">
+                <a href="http://tims.cisex.com/warp.cmd?ent=$id.value" target="_blank">$resultSummary.iD.get(0).value</a><img class="loader" src="${base}/images/tims/loader.gif"></td>
+
+            #if($data.tableSpec.containsColumn("total"))
+                <td style="text-align:center">
+                    $resultSummary.getResultTicker("total").count</td>
+            #end
+            #if($data.tableSpec.containsColumn("pending"))
+                <td style="text-align:center">
+                    $resultSummary.getResultTicker("pending").count ($resultSummary.getResultTicker("pending").formattedPercentage%)</td>
+            #end
+            #if($data.tableSpec.containsColumn("blocked"))
+                <td style="text-align:center">
+                    $resultSummary.getResultTicker("blocked").count ($resultSummary.getResultTicker("blocked").formattedPercentage%)</td>
+            #end
+            #if($data.tableSpec.containsColumn("passed"))
+                <td style="text-align:center">
+                    $resultSummary.getResultTicker("passed").count ($resultSummary.getResultTicker("passed").formattedPercentage%)</td>
+            #end
+            #if($data.tableSpec.containsColumn("passx"))
+                <td style="text-align:center">
+                    $resultSummary.getResultTicker("passx").count ($resultSummary.getResultTicker("passx").formattedPercentage%)</td>
+            #end
+            #if($data.tableSpec.containsColumn("failed"))
+                <td style="text-align:center">
+                    $resultSummary.getResultTicker("failed").count ($resultSummary.getResultTicker("failed").formattedPercentage%)</td>
+            #end
+            #if($data.tableSpec.containsColumn("dropped"))
+                <td style="text-align:center">
+                    $resultSummary.getResultTicker("dropped").count ($resultSummary.getResultTicker("dropped").formattedPercentage%)</td>
+            #end
+            #if($data.tableSpec.containsColumn("executed"))
+                <td style="text-align:center">
+                    $resultSummary.getResultTicker("executed").count</td>
+            #end
+            #if($data.tableSpec.containsColumn("quality"))
+                <td style="text-align:center">
+                    $resultSummary.getResultTicker("quality").formattedPercentage%</td>
+            #end
+            #if($data.tableSpec.containsColumn("defects"))
+                <td style="text-align:center">
+                    $resultSummary.getResultTicker("defects").count</td>
+            #end
+        </tr>
+            #if($even)
+                #set($even = false)
+            #else
+                #set($even = true)
+            #end
+        #end
+    </tbody>
+</table>
+#else
+<div style="text-align: center">Fail to load the specified report</div>
+#end

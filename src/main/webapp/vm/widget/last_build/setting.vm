@@ -1,0 +1,273 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <link type="text/css" rel="stylesheet" href="${base}/css/jquery-ui-1.8.22.custom.css" />
+    <link type="text/css" rel="stylesheet" href="${base}/css/common.css" />
+    <link type="text/css" rel="stylesheet" href="${base}/css/jquery.plugins.css" />
+
+    <script type="text/javascript" src="${base}/script/jquery172.js"></script>
+    <script type="text/javascript" src="${base}/script/jquery-ui-1.8.22.custom.min.js"></script>
+    <script type="text/javascript" src="${base}/script/common.js"></script>
+    <script type="text/javascript" src="${base}/script/jquery.plugins.js"></script>
+
+
+
+    <style type="text/css">
+        body {
+            font-size: 62.5%;
+            padding: 0;
+            margin: 0;
+        }
+
+        body * {
+            font-family: "Courier New", Arial;
+        }
+
+        form {
+            font-size: 1.2em;
+        }
+
+        fieldset {
+            border-color: rgba(242, 242, 242, 0.5);
+            border-radius: 6px;;
+        }
+
+        form input {
+            padding: 0.2em;
+            outline: none;
+        }
+
+        form ul {
+            padding: 0 5px;
+            margin: 0;
+        }
+        form ul li {
+            list-style: none;
+            padding-bottom: 20px;
+        }
+
+        form ul li span {
+            color: #0D5995;
+            font-weight: bold;
+        }
+
+        .ui-autocomplete {
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+
+    </style>
+
+    <script type="text/javascript">
+        var pcs = $project_codes;
+
+        var pcstr = '$config.getProjectCodes()';
+
+        var json = eval('(' + pcstr + ')');
+
+
+        function getProjectCodes(el) {
+            var bipt = el;
+
+            var els = bipt.BulkInput('items');
+            var pcs = $.map(els, function(el, i) {
+                return $(el).data('val').text;
+            });
+
+            return pcs;
+        }
+
+        function getSettings() {
+            var config = {};
+
+            config.name = $.trim($("#name").val());
+
+            config.project_codes = {};
+
+
+            config.project_codes['--'] = getProjectCodes($("#project_code_wrapper").find("fieldset:first").find("div"));
+
+            var fieldsets = $("#project_code_wrapper").find("fieldset:gt(0)");
+
+            $.each(fieldsets, function(i, el) {
+                var key = $(el).find("legend").find('a').contents().get(0).nodeValue;
+                var div = $(el).find("div");
+                var ppp = getProjectCodes(div);
+                config.project_codes[key] = ppp;
+            });
+
+            return config;
+        }
+
+        function addGroup(val) {
+            var wrap = $("#project_code_wrapper");
+
+            var last = wrap.find("fieldset:last");
+
+            var fieldset = $('<fieldset></fieldset>');
+            var legend = $('<legend></legend>');
+            var div = $('<div></div>');
+
+            var grpName = $('<a href="javascript:void(0)" class="new-link-item2"></a>');
+            grpName.html(val);
+            grpName.append($('<span>&times;</span>'));
+
+            legend.append(grpName);
+
+            fieldset.append(legend);
+            fieldset.append(div);
+
+            fieldset.insertAfter(last);
+            fieldset.css('margin-top', '10px');
+
+            resizeIfrmSize("setting");
+            return fieldset;
+        }
+
+        $(function() {
+
+            // wrapper click event:
+            // 1. remove group
+            $("#project_code_wrapper").click(function(e) {
+                if(e.target.nodeName.toLowerCase() != "span") return;
+
+                var el = $(e.target);
+
+                var legend = el.parent().parent();
+
+                if(legend.length == 0) return;
+
+                if(legend.get(0).nodeName.toLowerCase() != "legend") return;
+
+                legend.parent().remove();
+            });
+
+            // initialize groups and their project codes,
+            // and group '--' has been added previously.
+            if(!json['--']) {
+                var noGroup = $("#project_code_wrapper").find("fieldset:first").find("div");
+                noGroup.BulkInput();
+                noGroup.BulkInput('source', pcs);
+                noGroup.BulkInput('option', 'on-added', function() {
+                    resizeIfrmSize("setting");
+                });
+            }
+
+            $.each(json, function(key, val) {
+                var selPcs = json[key];
+
+                if(key == '--') {
+                    var noGroup = $("#project_code_wrapper").find("fieldset:first").find("div");
+
+                    noGroup.BulkInput();
+                    noGroup.BulkInput('source', pcs);
+                    noGroup.BulkInput('option', 'on-added', function() {
+                        resizeIfrmSize("setting");
+                    });
+                    $.each(selPcs, function(i, v) {
+                        noGroup.BulkInput('add', v);
+                    });
+
+                } else {
+                    var fieldset = addGroup(key);
+
+                    var grp = fieldset.find("div");
+                    grp.BulkInput();
+                    grp.BulkInput('source', pcs);
+
+                    $.each(selPcs, function(i, v) {
+                        grp.BulkInput('add', v);
+                    });
+                }
+            });
+
+
+            resizeIfrmSize("setting");
+
+
+            $("#add_project_code_group").click(function() {
+                var _this = $(this);
+
+                var span = _this.find("a");
+
+                var ipt = _this.find("input:text");
+
+                if(ipt.length == 0) {
+                    ipt = $('<input type="text" style="padding: 0; width: 90%;" />');
+
+                    _this.append(ipt);
+
+                    ipt.blur(function() {
+                        ipt.hide();
+                        span.show();
+                    });
+
+                    ipt.focus(function() {
+                        ipt.show();
+                        span.hide();
+                    });
+
+                    ipt.keypress(function(e) {
+                        if(e.which == 13) {
+                            var val = $.trim(ipt.val());
+
+                            if($.trim(val) == "") return;
+
+                            var fieldset = addGroup(val);
+                            fieldset.find("div").BulkInput();
+                            fieldset.find("div").BulkInput('source', pcs);
+
+                            ipt.val('');
+                            ipt.hide();
+                            span.show();
+                        }
+                    });
+                }
+
+
+                span.hide();
+                ipt.show();
+                ipt.focus();
+            });
+        });
+    </script>
+
+
+</head>
+
+<body>
+<form onsubmit="return false;">
+
+    <ul>
+        <li>
+            <span>Widget Name:</span><br />
+            <input id="name" name="name" value='$config.get("name")' style="width: 90%;" />
+        </li>
+
+
+        <li>
+            <span>Project Codes:</span><br />
+
+            <div id="project_code_wrapper">
+                <fieldset>
+                    <legend style="color: #a00; font-weight: bold;">Not Grouped Project Codes</legend>
+                    <div>
+
+                    </div>
+                </fieldset>
+            </div>
+        </li>
+
+        <div id="add_project_code_group">
+            <a class="btn01" style="cursor: pointer;">+ Add a Group</a>
+        </div>
+    </ul>
+
+    <div style="height: 100px"></div>
+
+    <span id="global_width" style="visibility: hidden;">WW</span>
+</form>
+</body>
+</html>

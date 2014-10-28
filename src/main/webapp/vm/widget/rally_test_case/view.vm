@@ -1,0 +1,327 @@
+#* @vtlvariable name="setting" type="com.webex.qd.widget.RallyDefectWidget.Configuration" *#
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<head>
+<link type="text/css" rel="stylesheet" href="${base}/css/common.css"/>
+<link type="text/css" rel="stylesheet" href="${base}/css/jquery.plugins.css"/>
+<link type="text/css" rel="stylesheet" href="${base}/css/font-awesome.css"/>
+
+    #if($setting.useSpecifiedLoginKey())
+    <script a="b" type="text/javascript"
+            src="https://rally1.rallydev.com/apps/1.32/sdk.js?showHeader=false&loginKey=$setting.login_key"></script>
+    #else
+    <script type="text/javascript"
+            src="https://rally1.rallydev.com/apps/1.32/sdk.js?showHeader=false&loginKey=$RallyHuaiChaoLoginKey"></script>
+    #end
+
+<script src="${base}/script/jquery172.js" type="text/javascript"></script>
+
+<script src="${base}/script/common.js" type="text/javascript"></script>
+<script src="${base}/script/jquery.plugins.js" type="text/javascript"></script>
+
+
+<style type="text/css">
+    .tbl input[type="text"] {
+        padding: 0;
+        margin: 0;
+        border: 0;
+        outline: none;
+        width: 100%;
+        height: 16px;
+    }
+</style>
+<script type="text/javascript">
+var workspace = "4417483097";
+var project = "6586346845";
+var page = 0;
+var pageSize = 10;
+var records = 0;
+
+
+var R = [
+    {
+        fetch: 'FormattedID',
+        header: 'ID',
+        evaluate: 'FormattedID',
+        query: null
+    },
+    {
+        fetch: 'Name',
+        header: 'Name',
+        evaluate: 'Name',
+        query: null
+    },
+    {
+        fetch: 'WorkProduct',
+        header: 'Work Product',
+        evaluate: 'WorkProduct.FormattedID',
+        query: 'WorkProduct.FormattedID'
+    },
+    {
+        fetch: 'Type',
+        header: 'Type',
+        evaluate: 'Type',
+        query: 'Type'
+    },
+    {
+        fetch: 'Owner',
+        header: 'Owner',
+        evaluate: 'Owner._refObjectName',
+        query: 'Owner.DisplayName'
+    },
+    {
+        fetch: 'LastVerdict',
+        header: 'Last Verdict',
+        evaluate: 'LastVerdict',
+        query: 'LastVerdict'
+    },
+    {
+        fetch: 'LastBuild',
+        header: 'Last Build',
+        evaluate: 'LastBuild',
+        query: null
+    },
+    {
+        fetch: 'LastRun',
+        header: 'Last Run',
+        evaluate: 'LastRun',
+        query: null
+    }
+];
+
+var FetchString = $.map(R,function (val, idx) {
+    return val['fetch'];
+}).join(',');
+
+
+function foo() {
+    var rallyDataSource = new rally.sdk.data.RallyDataSource(
+            workspace,
+            project,
+            false,
+            true);
+
+
+    var q = [];
+
+    $("#testCaseDiv").find('table:first').find('input:text').each(function (idx, el) {
+        var val = $.trim($(el).val());
+        if (val == "") return;
+        var key = $(el).attr('key');
+        q.push(key + ' = "' + val + '"');
+    });
+
+    var query = rally.sdk.util.Query.and(q);
+
+
+    var queryObject = {
+        key: "testcases",
+        type: "testcase",
+        fetch: FetchString,
+        query: query,
+        start: (page * pageSize + 1),
+        pagesize: pageSize
+    };
+
+    rallyDataSource.find(queryObject, showDefects, onError);
+}
+
+
+function showDefects(results) {
+    var testCases;
+
+    try {
+        testCases = results.testcases;
+        records = testCases.TotalResultCount;
+    } catch (e) {
+    }
+
+    showTable(testCases);
+
+    resize();
+}
+
+function onError() {
+
+}
+
+
+function showTable(testCases, count) {
+    if ($("#testCaseDiv").find('table').length > 0) {
+        var tbl = $("#testCaseDiv").find('table:first');
+        tbl.find('tbody').remove();
+        showContent(tbl, testCases);
+        updateDefectPager(tbl);
+    } else {
+        var tbl = $('<table class="tbl"></table>');
+
+        showHeader(tbl);
+        showContent(tbl, testCases);
+        showPager(tbl);
+
+        $("#testCaseDiv").append(tbl);
+    }
+}
+
+function showHeader(tbl) {
+    var thead = $('<thead></thead>');
+    tbl.append(thead);
+
+    var tr = $('<tr></tr>');
+    thead.append(tr);
+
+    $.each(R, function (idx, val) {
+        tr.append('<th>' + val.header + '</th>')
+    });
+
+
+    // header filters
+    tr = $('<tr class="nopadding"></tr>');
+
+    $.each(R, function(idx, val) {
+        if(val.query == null) {
+            tr.append('<th></th>');
+        } else {
+            tr.append('<th><input type="text" key="' + val.query + '" /></th>');
+        }
+    });
+
+    tr.find('th:last').append('<input type="button" id="f" value="Filter" />');
+    thead.append(tr);
+
+    tr.find('#f').click(function () {
+        page = 0;
+        foo();
+    });
+}
+
+function showContent(tbl, testCases) {
+    var tbody = $('<tbody></tbody>');
+    tbl.append(tbody);
+
+    $.each(testCases, function (i, vi) {
+        var tr = $('<tr></tr>'), td;
+        tbody.append(tr);
+        $.each(R, function (j, vj) {
+            var exp = 'vi.' + vj.evaluate, val;
+            try {
+                val = eval('(' + exp + ')');
+
+                if (vj.fetch == 'LastRun') {
+                    val = val.substr(0, 10);
+                }
+
+                else if (vj.fetch == 'LastBuild') {
+                    var reg = /(\d{1,2}\/\d{1,2}\/\d{4}|\d{1,2}-\d{1,2}-\d{4})/;
+                    if (val.match(reg)) {
+                        var dd = new Date(val);
+                        var y = dd.getFullYear();
+                        var m = dd.getMonth() + 1;
+                        var d = dd.getDate();
+
+                        if (m < 10) m = '0' + m;
+                        if (d < 10) d = '0' + d;
+
+                        val = y + '-' + m + '-' + d;
+                    }
+                }
+            } catch (e) {
+                val = '';
+            }
+            if(!val) val = '';
+            val = val.replace(/"/g, '&quot;');
+            tr.append('<td title="' + val + '">' + val + '</td>');
+        });
+    });
+}
+
+
+function showPager(tbl) {
+    tbl.find('tfoot').remove();
+    tbl.append('' +
+            '<tfoot>' +
+            '   <tr>' +
+            '       <td colspan="' + R.length + '" style="text-align: right;">' +
+            '           <span>Page ' + (page + 1) + ' of ' + Math.ceil(records / pageSize) + ', Test Cases ' + records + '</span>' +
+            '           <a href="javascript:;" k="prev" class="btn01">Prev</a>' +
+            '           <a href="javascript:;" k="next" class="btn01">Next</a>' +
+            '       </td>' +
+            '   </tr>' +
+            '</tfoot>');
+
+    tbl.find('tfoot').find('a[k=prev]').click(function () {
+        page--;
+        foo();
+    });
+
+    tbl.find('tfoot').find('a[k=next]').click(function () {
+        page++;
+        foo();
+    });
+
+    updateDefectPager(tbl);
+}
+
+function updateDefectPager(tbl) {
+    tbl.find('tfoot').find('span').html('Page ' + (page + 1) + ' of ' + Math.ceil(records / pageSize) + ', Test Cases ' + records);
+
+    tbl.find('tfoot').find('a:hidden').show();
+
+    if (page == 0) {
+        tbl.find('tfoot').find('a[k=prev]').hide();
+    }
+    if (page == Math.ceil(records / pageSize) - 1) {
+        tbl.find('tfoot').find('a[k=next]').hide();
+    }
+
+
+}
+
+
+
+rally.addOnLoad(function () {
+    $("#appHeader").remove();
+    $(".dijitTooltip").remove();
+    $("#projects").find("a:first").click();
+});
+
+
+function waitReady() {
+    if (!!rally.sdk.data) {
+        setTimeout(function () {
+            $("#projects").find("a:first").click();
+        }, 1000);
+    } else {
+        setTimeout(waitReady, 200);
+    }
+}
+
+$(function () {
+    $("#projects").MenuBar();
+    $("#projects").MenuBar('on', 'click', function (menuBar, menuItem) {
+        var wsid = menuItem.attr('ws');
+        var pjtid = menuItem.attr('pjt');
+        workspace = wsid;
+        project = pjtid;
+
+        page = 0;
+        foo();
+    });
+
+    waitReady();
+});
+
+
+</script>
+</head>
+<body style="padding: 0; margin: 0;">
+    <div style="text-align: center;" id="projects">
+        #foreach($p in $setting.projects)<a href="javascript:void(0)"
+                                            ws="$p.workspace_id"
+                                            pjt="$p.project_id">$p.display_name</a>#end
+    </div>
+
+
+    <div id="testCaseDiv"></div>
+
+</body>

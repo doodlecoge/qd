@@ -1,0 +1,195 @@
+#* @vtlvariable name="config" type="com.webex.qd.widget.ProductTrendsWidget.Configuration" *#
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <link type="text/css" rel="stylesheet" href="${base}/css/jquery-ui-1.8.22.custom.css" />
+    <link type="text/css" rel="stylesheet" href="${base}/css/common.css" />
+    <link type="text/css" rel="stylesheet" href="${base}/css/jquery.plugins.css" />
+
+    <script type="text/javascript" src="${base}/script/jquery172.js"></script>
+    <script type="text/javascript" src="${base}/script/jquery-ui-1.8.22.custom.min.js"></script>
+    <script type="text/javascript" src="${base}/script/common.js"></script>
+    <script type="text/javascript" src="${base}/script/jquery.plugins.js"></script>
+
+    <style type="text/css">
+        body {
+            font-size: 62.5%;
+            padding: 0;
+            margin: 0;
+        }
+
+        body * {
+            font-family: "Courier New", Arial;
+        }
+
+        form * {
+            font-size: 1em;
+        }
+
+        form {
+            font-size: 1.2em;
+        }
+
+        form input {
+            padding: 0.2em;
+            outline: none;
+        }
+
+        form ul {
+            padding: 0 5px;
+            margin: 0;
+        }
+        form ul li {
+            list-style: none;
+            padding-bottom: 20px;
+        }
+
+        form ul li span {
+            color: #0D5995;
+            font-weight: bold;
+        }
+
+        .ui-autocomplete {
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        label {
+            float: left;
+            padding: 0;
+        }
+
+        .ui-button .ui-button-text {
+            padding: 0.2em 1.2em;
+        }
+    </style>
+
+    <script type="text/javascript">
+        function split(val) {
+            return val.split(/,\s*/);
+        }
+
+        function last(val) {
+            return split(val).pop();
+        }
+
+        function getSettings() {
+            var config = {};
+
+            config.name = $.trim($("#name").val());
+
+            var els = $("#project_codes").BulkInput('items');
+            var pcs = $.map(els, function(el, i) {
+                return $(el).data('val').text;
+            });
+            config.project_codes = pcs;
+
+            config.builds = $.trim($("#build_count input:radio:checked").val());
+
+
+            return config;
+        }
+
+
+
+
+        $(function() {
+            $("form input:text").addClass("text")
+                    .addClass("ui-corner-all")
+                    .addClass("ui-widget-content");
+
+
+            $("#build_count").buttonset();
+
+            if($("#build_count input:radio:checked").length <= 0)
+                $("#build_count input:radio:first").attr('checked', 'checked');
+            $("#build_count").buttonset('refresh');
+
+
+            var pcs = $project_codes;
+            var pcstr = "$config.getProjectCodesAsString()";
+
+            var selPcs = null;
+            if($.trim(pcstr) != "") selPcs = pcstr.split(",");
+
+            var bipt = $("#project_codes");
+            bipt.BulkInput();
+            if(selPcs) {
+                $.each(selPcs, function(i, v) {
+                    bipt.BulkInput('add', v);
+                });
+            }
+
+
+            bipt.BulkInput('option', 'on-added', function() {
+                resizeIfrmSize("setting");
+            });
+
+            bipt.BulkInput('source', pcs);
+
+
+            resizeIfrmSize("setting");
+
+        });
+    </script>
+
+
+</head>
+
+<body>
+<form onsubmit="return false;">
+    <ul>
+        <li>
+            <span>Widget Name:</span><br />
+            <input id="name" name="name" style="width: 90%" value='$config.getName()' />
+        </li>
+
+
+        <li>
+            <span>Project Codes:</span><br />
+            <div id="project_codes" style="padding: 5px;border:1px solid #ccc;border-radius: 6px;">
+            </div>
+        </li>
+
+        <li>
+            <span>Select how many builds to show up:</span> <br />
+
+            <div id="build_count">
+                #if(7 == $config.getBuilds())
+                    <input type="radio" name="bc" value="7" id="bc_7" checked="checked" />
+                    <label for="bc_7">Weekly</label>
+
+                    <input type="radio" name="bc" value="15" id="bc_15" />
+                    <label for="bc_15">15 Days</label>
+
+                    <input type="radio" name="bc" value="30" id="bc_30" />
+                    <label for="bc_30">Monthly</label>
+                #elseif(15 == $config.getBuilds())
+                    <input type="radio" name="bc" value="7" id="bc_7" />
+                    <label for="bc_7">Weekly</label>
+
+                    <input type="radio" name="bc" value="15" id="bc_15" checked="checked" />
+                    <label for="bc_15">15 Days</label>
+
+                    <input type="radio" name="bc" value="30" id="bc_30" />
+                    <label for="bc_30">Monthly</label>
+                #else
+                    <input type="radio" name="bc" value="7" id="bc_7" />
+                    <label for="bc_7">Weekly</label>
+
+                    <input type="radio" name="bc" value="15" id="bc_15" />
+                    <label for="bc_15">15 Days</label>
+
+                    <input type="radio" name="bc" value="30" id="bc_30" checked="checked" />
+                    <label for="bc_30">Monthly</label>
+                #end
+            </div>
+        </li>
+    </ul>
+
+    <div style="height: 100px"></div>
+</form>
+</body>
+</html>

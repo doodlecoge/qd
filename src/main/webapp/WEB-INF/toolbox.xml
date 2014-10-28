@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--<toolbox>-->
+<!--&lt;!&ndash;<tool>&ndash;&gt;-->
+<!--&lt;!&ndash;<key>dateUtil</key>&ndash;&gt;-->
+<!--&lt;!&ndash;<scope>application</scope>&ndash;&gt;-->
+<!--&lt;!&ndash;<class>com.sa.common.util.DateUtil</class>&ndash;&gt;-->
+<!--&lt;!&ndash;</tool>&ndash;&gt;-->
+<!--</toolbox>-->
+
+<tools>
+    <data type="string" key="ver" value="2013_12_19-01"></data>
+    <data type="string" key="RallyHuaiChaoLoginKey"
+          value="251f70d63ae2a61d2dee5aa3b06de395336a9f5fe79d878519155143e2b70a19|fc162804895d281cdc3f48d134e9f79b|7a6f0baaef963851090246e2721c61cf67183206950f824f8bcbb3afbd3caf83a3409be16a16133769c57bee83c02f2b|101,71,72,128,17,65,151,115,147,136,84,102,104,146,67,145"></data>
+</tools>

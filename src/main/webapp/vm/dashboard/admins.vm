@@ -1,0 +1,57 @@
+#* @vtlvariable name="base"     type="java.lang.String" *#
+#* @vtlvariable name="principal"     type="org.springframework.security.ldap.userdetails.InetOrgPerson" *#
+#* @vtlvariable name="user"     type="com.webex.qd.vo.User" *#
+#* @vtlvariable name="dashboard"     type="com.webex.qd.vo.Dashboard" *#
+#* @vtlvariable name="admin"     type="boolean" *#
+#* @vtlvariable name="owner"     type="com.webex.qd.vo.User" *#
+#* @vtlvariable name="administrators"     type="java.util.List<com.webex.qd.vo.UserDashboardEntry>" *#
+
+<div style="text-align: left;">
+    <ul style="float: right;margin: -5px;padding-right:30px">
+        #if($principal)
+            #if($user.id != $dashboard.uid && !($user.isAdminOfDashboard($dashboard.id)))
+                <li style="display: block;list-style: none;float: left;" class="dashboard_edit_button">
+                    <a href="javascript:toggleFav($dashboard.id);">
+                        #if($user.isFollowerOfDashboard($dashboard.id))
+                            <span style="background-image: url('${base}/images/fav_on_24.png');">Remove Favorite</span>
+                        #else
+                            <span style="background-image: url('${base}/images/fav_off_24.png');">Add Favorite</span>
+                        #end
+                    </a>
+                </li>
+            #end
+            #if($user.isAdminOfDashboard($dashboard.id) || $user.id == $dashboard.uid || $admin)
+                <li style="display: block;list-style: none;float: left;" class="dashboard_edit_button">
+                    <a href="javascript:showAddWidgetDialog();">
+                        <span style="background-image: url('${base}/images/add_24.png');background-size:23px;">Add Widget</span>
+                    </a>
+                </li>
+            #end
+            #if($user.id == $dashboard.uid || $admin)
+                <li style="display: block;list-style: none;float: left;" class="dashboard_edit_button">
+                    <a href="javascript:showUserManagementDialog();">
+                        <span style="background-image: url('${base}/images/users_24.png');">User Management</span>
+                    </a>
+                </li>
+            #end
+            <li style="display: block;list-style: none;float: left;" class="dashboard_edit_button">
+                <a href="javascript:showCopyDashBoard();">
+                    <span style="background-image: url('${base}/images/copy.png');background-size:23px;">Copy DashBoard</span>
+                </a>
+            </li>
+        #end
+    </ul>
+
+    <ul id="owner_bar" style="margin:12px 0;">
+        <li style="padding-right: 4px;font-weight:bold;">Owner: </li>
+        <li>
+            <a class="adminButton" style="background-image: url('http://wwwin.cisex.com/dir/photo/tn/${owner.username}.jpg')" href="http://wwwin-tools.cisex.com/dir/reports/$owner.username" target="_blank">$owner.fullname</a>
+        </li>
+        <li style="padding-right: 4px;font-weight:bold;padding-left:5px;">Administrators: </li>
+        #foreach($administrator in $administrators)
+            <li>
+                <a class="adminButton" style="background-image: url('http://wwwin.cisex.com/dir/photo/tn/${administrator.user.username}.jpg')" href="http://wwwin-tools.cisex.com/dir/reports/$administrator.user.username" target="_blank">$administrator.user.fullname</a>
+            </li>
+        #end
+    </ul>
+</div>

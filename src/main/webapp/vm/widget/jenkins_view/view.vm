@@ -1,0 +1,127 @@
+#* @vtlvariable name="data"     type="com.webex.qd.widget.JenkinsViewWidget.Data" *#
+#* @vtlvariable name="setting"     type="com.webex.qd.widget.JenkinsViewWidget.Configuration" *#
+#* @vtlvariable name="index"     type="int" *#
+<html>
+<head>
+    <link type="text/css" rel="stylesheet" href="${base}/css/jenkins/style.css"/>
+    <script type="text/javascript" src="${base}/script/jquery172.js"></script>
+    <script type="text/javascript" src="${base}/script/common.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            resizeIfrmSizeWithMaxHeight("view", 300);
+        });
+    </script>
+</head>
+<body>
+<div class="dashboard">
+    <table cellpadding="0" cellspacing="0" id="viewList">
+        <tbody>
+        <tr style="height:3px;">
+            <td style="height:3px; padding:0px"></td>
+            #set($i = 0)
+            #foreach($entry in $setting.jenkinsViews)
+                #if($i == $index)
+                    <td class="active" rowspan="2">$data.configEntry.displayName</td>
+                #else
+                    <td style="height:3px; padding:0px"></td>
+                #end
+                #set($i = $i + 1)
+            #end
+        </tr>
+        <tr>
+            <td style="border: none; border-bottom: 1px solid #bbb;">&nbsp;</td>
+            #set($i = 0)
+            #foreach($entry in $setting.jenkinsViews)
+                #if($i < $index)
+                    <td class="inactive noRight"><a href="?tabIndex=$i">$entry.displayName</a></td>
+                #elseif($i > $index)
+                    <td class="inactive noLeft"><a href="?tabIndex=$i">$entry.displayName</a></td>
+                #end
+                #set($i = $i + 1)
+            #end
+            <td class="filler">&nbsp;</td>
+        </tr>
+        </tbody>
+    </table>
+    <table id="projectstatus" style="margin-top:0px; border-top: none;" class="sortable pane bigtable">
+        <tbody>
+        <tr style="border-top: 0px;">
+            <th tooltip="Status of the last build" title="Status of the last build"><span>S</span></th>
+            <th tooltip="Weather report showing aggregated status of recent builds"
+                title="Weather report showing aggregated status of recent builds"><span>W</span></th>
+            <th><span>Name</span></th>
+            <th><span>Last Success</span></th>
+            <th><span>Last Failure</span></th>
+            <th><span>Last Duration</span></th>
+            <th>&nbsp;</th>
+        </tr>
+
+        #if (!$data.view)
+            <tr>
+                <td colspan="7" style="text-align: center">Nothing can be found from "$data.configEntry.viewUrl"</td>
+            </tr>
+        #end
+
+        #foreach($job in $data.view.jobs)
+            <tr id="$job.name">
+                <td><img alt="Success" class="icon32x32" src="${base}/images/jenkins/${job.colorIcon}.gif"></td>
+                <td data="100" class="healthReport" onmouseover="this.className='healthReport hover';return true;"
+                    onmouseout="this.className='healthReport';return true;">
+                    <a target="_blank" href="$data.configEntry.viewUrl/job/$job.name/lastBuild"><img alt="100%" class="icon32x32" src="${base}/images/jenkins/$job.healthIcon"></a>
+                    #if ($job.healthReport.size() > 0)
+                    <div class="healthReportDetails">
+                        <table border="0">
+                            <thead>
+                            <tr>
+                                <th align="left">W</th>
+                                <th align="left">Description</th>
+                                <th align="right">%</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            #foreach($healthReport in $job.healthReport)
+                            <tr>
+                                <td align="left"><img title="" alt=""
+                                                      src="${base}/images/jenkins/$healthReport.iconUrl"></td>
+                                <td>$healthReport.description</td>
+                                <td align="right">$healthReport.score</td>
+                            </tr>
+                            #end
+                            </tbody>
+                        </table>
+                    </div>
+                    #end
+                </td>
+                <td><a class="model-link inside" target="_blank" href="$data.configEntry.viewUrl/job/$job.name">$job.displayName</a></td>
+                #if($job.lastSuccessBuild)
+                    <td data="2013-05-03T14:53:37Z">
+                        $job.lastSuccessBuild.timeSpan
+                        - <a class="model-link inside" target="_blank"
+                             href="$data.configEntry.viewUrl/job/$job.name/lastSuccessfulBuild/">#$job.lastSuccessBuild.number</a></td>
+                #else
+                    <td data="-">N/A</td>
+                #end
+                #if($job.lastFailureBuild)
+                    <td data="2013-01-30T07:03:21Z">
+                        $job.lastFailureBuild.timeSpan
+                        - <a target="_blank" class="model-link inside" href="$data.configEntry.viewUrl/job/$job.name/lastFailedBuild/">#$job.lastFailureBuild.number</a>
+                    </td>
+                #else
+                    <td data="-">N/A</td>
+                #end
+                #if($job.lastSuccessBuild)
+                    <td data="$job.lastSuccessBuild.duration">$job.lastSuccessBuild.durationString</td>
+                #elseif($job.lastFailureBuild)
+                    <td data="$job.lastFailureBuild.duration">$job.lastFailureBuild.durationString</td>
+                #else
+                    <td data="-1">N/A</td>
+                #end
+                <td>&nbsp;</td>
+            </tr>
+        #end
+        </tbody>
+    </table>
+
+</div>
+</body>
+</html>

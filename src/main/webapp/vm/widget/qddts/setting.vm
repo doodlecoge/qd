@@ -1,0 +1,123 @@
+#* @vtlvariable name="setting" type="com.webex.qd.widget.CdetsWidget.Configuration" *#
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <script type="text/javascript" src="${base}/script/jquery172.js"></script>
+    <script type="text/javascript" src="${base}/script/common.js"></script>
+    <link type="text/css" rel="stylesheet" href="${base}/css/common.css"/>
+    <link type="text/css" rel="stylesheet" href="${base}/css/setting.css"/>
+    <script type="text/javascript" src="${base}/script/cdets/jquery.artDialog.min.js"></script>
+    <script type="text/javascript" src="${base}/script/cdets/artDialog.qd.plugins.js"></script>
+    <link type="text/css" rel="stylesheet" href="${base}/css/cdets/blue.css"/>
+    <link type="text/css" rel="stylesheet" href="${base}/css/setting_common.css"/>
+
+    <script type="text/javascript">
+        $(function () {
+            var table = $("#cdets_lst");
+            table.click(function (e) {
+                var el = $(e.target);
+                if (el.hasClass('del')) el.parent().parent().remove();
+            });
+            if(table.find("tbody tr").length == 0){   // there will be at least one line for editing
+                addNewRow(0);
+                resizeIfrmSize("setting");
+            }
+            $("#add").click(function () {
+                var maxIdx = $("#cdets_lst").find("tbody tr").last().attr("eidx");
+                var newIdx = 0;
+                if (maxIdx != null) {
+                    newIdx = parseInt(maxIdx) + 1;
+                }
+                addNewRow(newIdx);
+                resizeIfrmSize("setting");
+            });
+            $.each($(".advancedQuery"), function (i, val) {
+                $(val).attr('label', 'Advanced Query').bindEditor();
+            });
+        });
+
+        function addNewRow(idx) {
+            var tr = $('<tr></tr>');
+            tr.attr("eidx", idx);
+
+            var displayNameTd = $('<td><input name="" type="text" style="width: 90%" class="text ui-corner-all ui-widget-content"></td>');
+            displayNameTd.children().first().attr("name", "criterias[" + idx + "].displayName");
+            tr.append(displayNameTd);
+
+            var advancedQueryTd = $('<td><input name="" type="text" style="width: 90%" class="text ui-corner-all ui-widget-content"></td>');
+            advancedQueryTd.children().first().attr("name", "criterias[" + idx + "].advancedQuery");
+            tr.append(advancedQueryTd);
+
+            var detailsUrlTd = $('<td><input name="" type="text" style="width: 90%" class="text ui-corner-all ui-widget-content"></td>');
+            detailsUrlTd.children().first().attr("name", "criterias[" + idx + "].detailsUrl");
+            tr.append(detailsUrlTd);
+
+            var deleteButton = $('<td><a class="btn01 del" href="javascript:void(0)">Delete</a></td>');
+            tr.append(deleteButton);
+            $("#cdets_lst").find("tbody").append(tr);
+            advancedQueryTd.children().first().attr('label', 'Advanced Query').bindEditor();
+        }
+
+        function deleteRow() {
+
+        }
+    </script>
+</head>
+<body >
+<form id="jsonForm" action="save" method="post">
+    <ul>
+        <li>
+            <span>Widget Name:</span><br>
+            <input type="text" value="$name" style="width: 90%" name="name" id="name"
+                   class="text ui-corner-all ui-widget-content">
+        </li>
+
+
+        <li>
+            <span>Qddts Queries:</span>
+            <table class="tbl" id="cdets_lst" width="100%">
+                <thead>
+                <tr>
+                    <th width="20%">Display Name</th>
+                    <th width="50%">Qddts Query<i class="req"></i></th>
+                    <th width="20%">Details Url</th>
+                    <th></th>
+                </tr>
+                </thead>
+
+
+                <tbody>
+                    #set($idx = 0)
+                    #foreach($criteria in $setting.criterias)
+                    <tr eidx='$idx'>
+                        <td><input name="criterias[$idx].displayName" type="text" style="width: 90%"
+                                   class="text ui-corner-all ui-widget-content" value="$criteria.displayName"></td>
+                        <td><input name="criterias[$idx].advancedQuery" type="text" style="width: 95%"
+                                   class="text ui-corner-all ui-widget-content advancedQuery"
+                                   value="$criteria.advancedQuery"></td>
+                        <td><input name="criterias[$idx].detailsUrl" type="text" style="width: 90%"
+                                   class="text ui-corner-all ui-widget-content" value="$criteria.detailsUrl"></td>
+                        <td><a class="btn01 del" href="javascript:void(0)">Delete</a></td>
+                    </tr>
+                        #set($idx = $idx + 1)
+                    #end
+                </tbody>
+
+
+                <tfoot>
+                <tr style="min-height: 35px; height: 35px;">
+                    <td colspan="5" style="text-align: right;">
+                        <a href="javascript:void(0)" class="btn01" id="add">Add More ...</a>
+                    </td>
+                </tr>
+                </tfoot>
+            </table>
+        </li>
+    </ul>
+</form>
+<a target="_blank" href="$base/help/qddts/index.html" class="setting-help"></a>
+
+</body>
+</html>

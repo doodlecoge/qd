@@ -1,0 +1,290 @@
+#* @vtlvariable name="data"     type="com.webex.qd.widget.SonarWidget.Data" *#
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <link type="text/css" rel="stylesheet" href="${base}/css/sonar/nav.css"/>
+    <link type="text/css" rel="stylesheet" href="${base}/css/sonar/sonar_simple.css"/>
+##    <script type="text/javascript" src="${base}/script/jquery172.js"></script>
+    <script type="text/javascript" src="${base}/script/common.js"></script>
+    <script type="text/javascript" src="${base}/script/sonar/sonar.js"></script>
+    <script type="text/javascript">
+        var j = jQuery.noConflict();
+        j(function () {
+            resizeIfrmSizeJ($widget.id, j);
+        });
+    </script>
+
+</head>
+<body>
+
+    #if((!$data) || ($data.sonars.size() == 0))
+    <div>
+        <div style="height: 100px; line-height: 100px; text-align: center;">
+            Nothing to show, Please config the widget first.
+        </div>
+    </div>
+    #else
+    <table width="100%">
+    <tr><td>
+        <div id="source_tabs">
+            <ul class="tabs" id="nav">
+                #set($idx = 0)
+                #foreach($sonar in $data.sonars)
+                    <li>
+                        #if($sonar == $data.selected)
+                            <a class="selected" href="${base}/widget/sonar/view/$widget.id?projectIndex=$idx">$sonar.name
+                                #if($data.child)
+                                    ($data.child.name)
+                                #end
+                            </a>
+                        #else
+                            <a class="" href="${base}/widget/sonar/view/$widget.id?projectIndex=$idx">$sonar.name</a>
+                        #end
+                        #set($cidx = 0)
+                        #if ($sonar.hasChild())
+                            <ul>
+                            #foreach($child in $sonar.groups)
+                                <li><a class="dp" href="${base}/widget/sonar/view/$widget.id?projectIndex=$idx&cIndex=$cidx">$child.name</a></li>
+                                #set($cidx = $cidx + 1)
+                            #end
+                            </ul>
+                        #end
+                    </li>
+                    #set($idx = $idx + 1)
+                #end
+            </ul>
+        </div>
+    </td></tr>
+    <tr><td>
+        #set($resource = $data.resource)
+        #set($sonar_config = $data.selected)
+    <div id="dashboard">
+    <div class="block">
+        <div class="widget">
+            <table width="100%">
+                <tbody><tr>
+                    <td width="33%" valign="top" nowrap="">
+                        <div class="dashbox">
+
+                            <h3>Lines of code</h3>
+                            <p>
+                                <span class="big"><span id="m_ncloc">$resource.getMeasure("ncloc").formattedValue</span></span>
+                            </p>
+
+                            <p><span id="m_lines">$resource.getMeasure("lines").formattedValue</span> lines</p>
+
+
+
+                            <p>
+                                <span id="m_statements">$resource.getMeasure("statements").formattedValue</span> statements </p>
+
+
+                            <p><span id="m_files">$resource.getMeasure("files").formattedValue</span> files </p>
+
+
+                        </div>
+                    </td>
+                    <td width="33%" valign="top">
+                        <div class="dashbox">
+
+                            <h3>Classes</h3>
+                            <p>
+                                <span class="big"><span id="m_classes">$resource.getMeasure("classes").formattedValue</span></span>
+                            </p>
+                            <p><span id="m_packages">$resource.getMeasure("packages").formattedValue</span> packages </p>
+
+                            <p><span id="m_functions">$resource.getMeasure("functions").formattedValue</span> methods </p>
+
+                            <p><span id="m_accessors">$resource.getMeasure("accessors").formattedValue</span> accessors </p>
+                        </div>
+                    </td>
+
+                    <td valign="top">
+                        <div class="dashbox">
+                            <h3>Violations</h3>
+                            <div class="marginbottom10">
+<span class="big">
+<span id="m_violations">$resource.getMeasure("violations").formattedValue</span></span>
+
+                            </div>
+                        </div>
+                    </td>
+
+                    <td valign="top" nowrap="">
+                        <table class="clear width100">
+                            <tbody><tr>
+                                <td><img src="$sonar_config.url/images/priority/BLOCKER.png?1369729533" alt="Blocker"></td>
+                                <td> &nbsp;<a target="_blank" >Blocker</a></td>
+                                <td align="right" style="padding: 0 10px;">
+                                    <span id="m_blocker_violations">$resource.getMeasure("blocker_violations").formattedValue</span></td>
+                                <td align="left" style="padding-bottom:2px; padding-top:2px;">
+                                    #set($wid= $data.violationPercentage($resource.getMeasure("blocker_violations").value, $resource.getMeasure("critical_violations").value, $resource.getMeasure("major_violations").value, $resource.getMeasure("minor_violations").value, $resource.getMeasure("info_violations").value, $resource.getMeasure("blocker_violations").value))
+                                    <div style="width: 70px" class="barchart"><div style="width: $wid%;background-color:#777;"></div></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><img src="$sonar_config.url/images/priority/CRITICAL.png?1369729533" alt="Critical"></td>
+                                <td> &nbsp;<a target="_blank" >Critical</a></td>
+                                <td align="right" style="padding: 0 10px;">
+                                    <span id="m_critical_violations">$resource.getMeasure("critical_violations").formattedValue</span></td>
+                                <td align="left" style="padding-bottom:2px; padding-top:2px;">
+                                    #set($wid= $data.violationPercentage($resource.getMeasure("blocker_violations").value, $resource.getMeasure("critical_violations").value, $resource.getMeasure("major_violations").value, $resource.getMeasure("minor_violations").value, $resource.getMeasure("info_violations").value, $resource.getMeasure("critical_violations").value))
+                                    <div style="width: 70px" class="barchart"><div style="width: $wid%;background-color:#777;"></div></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><img src="$sonar_config.url/images/priority/MAJOR.png?1369729533" alt="Major"></td>
+                                <td> &nbsp;<a target="_blank" >Major</a></td>
+                                <td align="right" style="padding: 0 10px;">
+                                    <span id="m_major_violations">$resource.getMeasure("major_violations").formattedValue</span></td>
+                                <td align="left" style="padding-bottom:2px; padding-top:2px;">
+                                    #set($wid= $data.violationPercentage($resource.getMeasure("blocker_violations").value, $resource.getMeasure("critical_violations").value, $resource.getMeasure("major_violations").value, $resource.getMeasure("minor_violations").value, $resource.getMeasure("info_violations").value, $resource.getMeasure("major_violations").value))
+                                    <div style="width: 70px" class="barchart"><div style="width: $wid%;background-color:#777;"></div></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><img src="$sonar_config.url/images/priority/MINOR.png?1369729533" alt="Minor"></td>
+                                <td> &nbsp;<a target="_blank" >Minor</a></td>
+                                <td align="right" style="padding: 0 10px;">
+                                    <span id="m_minor_violations">$resource.getMeasure("minor_violations").formattedValue</span></td>
+                                <td align="left" style="padding-bottom:2px; padding-top:2px;">
+                                    #set($wid= $data.violationPercentage($resource.getMeasure("blocker_violations").value, $resource.getMeasure("critical_violations").value, $resource.getMeasure("major_violations").value, $resource.getMeasure("minor_violations").value, $resource.getMeasure("info_violations").value, $resource.getMeasure("minor_violations").value))
+                                    <div style="width: 70px" class="barchart"><div style="width: $wid%;background-color:#777;"></div></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><img src="$sonar_config.url/images/priority/INFO.png?1369729533" alt="Info"></td>
+                                <td> &nbsp;<a target="_blank" >Info</a></td>
+                                <td align="right" style="padding: 0 10px;">
+                                    <span id="m_info_violations">$resource.getMeasure("info_violations").formattedValue</span></td>
+                                <td align="left" style="padding-bottom:2px; padding-top:2px;">
+                                    #set($wid= $data.violationPercentage($resource.getMeasure("blocker_violations").value, $resource.getMeasure("critical_violations").value, $resource.getMeasure("major_violations").value, $resource.getMeasure("minor_violations").value, $resource.getMeasure("info_violations").value, $resource.getMeasure("info_violations").value))
+                                    <div style="width: 70px" class="barchart"><div style="width: $wid%;background-color:#777;"></div></div>
+                                </td>
+                            </tr>
+                            </tbody></table>
+                    </td>
+                </tr>
+                </tbody></table>
+        </div>
+    </div>
+
+    <div id="block_46" class="block">
+
+        <div style="height:100%;" class="class org.sonar.plugins.technicaldebt.TechnicalDebtWidget">
+            <div class="widget">
+                <table>
+                    <tr><td valign="top" width="33%">
+                        <div class="dashbox">
+                            <table>
+                                <tbody><tr>
+                                    <td><h3>Technical Debt</h3></td>
+                                    <td style="padding-left:2px;"><a target="Wiki" href="http://docs.codehaus.org/x/sQCDBw"><img src="$sonar_config.url/images/help.png?1369729533" class="png" alt="Help"></a></td>
+                                </tr>
+                                </tbody></table>
+                            <p>
+        <span class="big">
+          <span id="m_technical_debt_ratio">$resource.getMeasure("technical_debt_ratio").formattedValue</span>
+        </span>
+                            </p>
+                            <p>
+        <span>
+          $ <span id="m_technical_debt">$resource.getMeasure("technical_debt").formattedValue</span>
+                  </span>
+                            </p>
+                            <p>
+        <span>
+          <span id="m_technical_debt_days">$resource.getMeasure("technical_debt_days").formattedValue</span> man days
+                  </span>
+                            </p>
+                        </div>
+                    </td>
+
+                        <td>
+                            <div class="yui-u">
+##                                <img width="248" height="65" title="" src="$sonar_config.url/gchart?chs=248x65&amp;chd=t:$data.technicalDebtRepartData&amp;cht=p&amp;chl=$data.technicalDebtRepartColumn" alt="">
+
+                            </div>
+                        </td>
+                        <td width="50%" valign="top" nowrap="">
+
+                            <div class="dashbox">
+                                <h3>Unit test success</h3>
+                                <p><span class="big">
+<span id="m_test_success_density">$resource.getMeasure("test_success_density").formattedValue</span></span>
+                                </p>
+                                <p>
+                                   <span id="m_test_failures">$resource.getMeasure("test_failures").formattedValue</span> failures
+                                </p>
+                                <p>
+                                    <span id="m_test_errors">$resource.getMeasure("test_errors").formattedValue</span> errors
+                                </p>
+                                <p>
+                                    <span id="m_tests">$resource.getMeasure("tests").formattedValue</span> tests
+                                </p>
+
+                                <p>
+                                    <span id="m_skipped_tests">$resource.getMeasure("skipped_tests").formattedValue</span> skipped
+                                </p>
+
+##                                <p>
+##                                    <a target="_blank" title="" rel="" class="" ><span id="m_test_execution_time">$resource.getMeasure("test_execution_time").formattedValue</span></a>
+##                                </p>
+                            </div>
+
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <div style="clear: both;"></div>
+    </div>
+
+
+    <div id="block_10" class="block">
+
+        <div style="height:100%;" class="code_coverage">
+
+            <div class="widget">
+
+                <table width="100%">
+                    <tbody><tr>
+                        <td width="20%" valign="top" nowrap="">
+                            <div class="dashbox">
+                                <p class="title">Unit tests coverage</p>
+                                <p>
+                                    <span class="big"><a target="_blank" title="" rel="" class="" ><span id="m_coverage">$resource.getMeasure("coverage").formattedValue </span></a></span>
+                                </p>
+
+                                <p>
+                                    <a target="_blank" title="" rel="" class="" ><span id="m_line_coverage">$resource.getMeasure("line_coverage").formattedValue</span> line coverage</a>
+                                </p>
+##                                <p>total $resource.getMeasureFormattedValue("lines_to_cover", "-") uncovered $resource.getMeasureFormattedValue("uncovered_lines", "-")</p>
+                                <p>
+                                    <a target="_blank" title="" rel="" class="" ><span id="m_branch_coverage">$resource.getMeasure("branch_coverage").formattedValue</span> branch coverage</a>
+                                </p>
+##                                <p>total $resource.getMeasureFormattedValue("conditions_to_cover", "-") uncovered $resource.getMeasureFormattedValue("uncovered_conditions", "-")</p>
+                            </div>
+                        </td>
+
+##                        <td>
+##                            <div id="timeline-chart-52"></div>
+##                        </td>
+                    </tr>
+                    </tbody></table>
+
+                <div class="clear"></div>
+            </div>
+
+            <div style="clear: both;"></div>
+        </div>
+    </div>
+    </div>
+    </td></tr>
+    </table>
+    #end
+</body>
+</html>

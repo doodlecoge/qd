@@ -1,0 +1,249 @@
+#* @vtlvariable name="dbs"     type="java.util.List<com.webex.qd.vo.Workspace>" *#
+#* @vtlvariable name="uid"     type="int" *#
+<style type="text/css">
+    #search_db_txt_in_db_children {
+        width: 60%;
+    }
+
+    ul.public_db_names_panel {
+        padding: 0;
+        margin: 0;
+    }
+
+    ul.public_db_names_panel li {
+        list-style: none;
+        height: 25px;
+        line-height: 25px;
+        border-bottom: 1px solid #ccc;
+        position: relative;
+        padding-right: 5px;
+    }
+
+    ul.public_db_names_panel li .btns {
+        position: absolute;
+        right: 0;
+        top: 6px;
+        height: 14px;
+        line-height: 14px;
+        padding: 0 5px;
+    }
+
+    ul.public_db_names_panel li:hover {
+        background: #eee;
+    }
+
+    ul.public_db_names_panel li span.dis {
+        color: #ccc;
+    }
+
+    .handle {
+        background-image: url(../images/icons.png);
+        background-repeat: no-repeat;
+        background-position: -305px -3px;
+        height: 25px;
+        line-height: 25px;
+        width: 20px;
+        cursor: move;
+    }
+</style>
+
+<input type="text" id="search_db_txt_in_db_children" />
+
+<input type="hidden" id="search_db_hid_in_db_children"/>
+
+<a href="javascript:void(0)" class="btn01 add" id="add_in_db_children">Add</a>
+
+#if($dbs && $dbs.size() > 0)
+<ul class="public_db_names_panel">
+    #foreach($db in $dbs)
+        <li dbid="$db.id">
+            <span class="handle inline-block">&nbsp;</span>
+            #if($uid == $db.uid)
+                <span class="txt">$db.name</span>
+            #else
+                <span class="txt dis">$db.name</span>
+            #end
+            <span class="btns inline-block">
+            #if($db.uid == $uid || $admin == true)
+                #if($db.grp == 1)
+                    <a href="javascript:void(0)" class="btn01 arc">Manage Sub Dashboards</a>
+                #end
+                <a href="javascript:void(0)" class="btn01 del">&times;</a>
+            #end
+            </span>
+        </li>
+    #end
+</ul>
+#end
+
+<p>
+<a href="javascript:void(0)" class="btn01 save_ch_order">Save Order</a>
+<a href="javascript:void(0)" class="btn01 back">Back</a>
+    <span id="save_ch_db_order_msg" style="color: #006400; font-weight: bold;"></span>
+</p>
+
+<script language="javascript" type="text/javascript">
+    $(".title .txt", "#dialog_cc").html('Manage Public Dashboards For $workspace.name');
+
+    $("ul.public_db_names_panel").sortable({
+        handle: ".handle",
+        cursor: "move",
+        placeholder: "ph",
+        appendTo: "parent"
+    });
+
+    $("ul.public_db_names_panel").disableSelection();
+
+    $(".save_ch_order").click(function() {
+        var ids = get_ch_db_order();
+        var wsid = $workspace.id;
+
+        $.get('${base}/dashboard/save_workspacedashboard_orders', {wsId:wsid, ids:ids.join(",")}, function(apiResult){
+            if(apiResult.success) {
+               $.get('${base}/dashboard/public_db_manager', {wsId : wsid}, function (data) {
+                        $(".content", "#dialog_cc").html(data);
+
+                    $("#save_ch_db_order_msg").html('Order Saved Successfully');
+
+                    setTimeout(function() {
+                        $("#save_ch_db_order_msg").html('');
+                    }, 2000);
+                });
+                update_nav_bar();
+            } else {
+                alert(apiResult.statusMessage);
+            }
+        }, "json");
+    });
+
+    function get_ch_db_order() {
+        var ids = [];
+        $(".public_db_names_panel").children("li").each(function() {
+            ids.push($(this).attr('dbid'));
+        });
+        return ids;
+    }
+
+    $("#search_db_txt_in_db_children").autocomplete({
+        source: function (req, resp) {
+            if (!!window.dashboard_lst) {
+                var ret = [];
+
+
+                $.each(window.dashboard_lst, function (idx, val) {
+                    if (val.label.toLowerCase().indexOf(req.term.toLowerCase()) != -1) ret.push(val);
+                });
+
+                resp(ret);
+
+            } else {
+                $.get("${base}/dashboard/all_dashboard_names", function (data) {
+                    window.dashboard_lst = data;
+                    var ret = [];
+
+                    $.each(window.dashboard_lst, function (idx, val) {
+                        if (val.label.toLowerCase().indexOf(req.term.toLowerCase()) != -1) ret.push(val);
+                    });
+
+                    resp(ret);
+                }, "json");
+            }
+        },
+
+        select: function(event, ui) {
+            $("#search_db_hid_in_db_children").val(ui.item.id);
+        },
+
+        close: function(event, ui) {
+            var id = $("#search_db_hid_in_db_children").val();
+            if(id == '') $("#search_db_txt_in_db_children").val('');
+            else {
+                var len = window.dashboard_lst.length;
+
+                for(var i = 0; i < len; i++) {
+                    if(window.dashboard_lst[i].id == id)
+                        $("#search_db_txt_in_db_children").val(window.dashboard_lst[i].label);
+                }
+            }
+        }
+    });
+
+    $("#search_db_txt_in_db_children").blur(function() {
+        var id = $("#search_db_hid_in_db_children").val();
+        var txt = $(this).val();
+        txt = $.trim(txt);
+
+        var len = window.dashboard_lst.length;
+
+        if(id == '' && txt == '') return;
+
+        for(var i = 0; i < len; i++) {
+            if(window.dashboard_lst[i].id == id || window.dashboard_lst[i].label == txt) {
+                $("#search_db_txt_in_db_children").val(window.dashboard_lst[i].label);
+                $("#search_db_hid_in_db_children").val(window.dashboard_lst[i].id);
+            }
+        }
+
+    });
+
+    $("#add_in_db_children").click(function() {
+        var wsid = $workspace.id;
+        var dbid = $("#search_db_hid_in_db_children").val();
+
+        if(dbid == '') {
+            alert('Dashboard has not been entered!');
+            return;
+        }
+        $.post('${base}/dashboard/add_db_2_ws', {workspaceId: wsid, dashboardId: dbid}, function(apiResult) {
+            if (apiResult.statusCode == -1) {
+                alert(apiResult.statusMessage);
+            } else {
+                var cont = $("#dialog_cc").find(".content");
+
+                $.get('${base}/dashboard/public_db_manager', {wsId:wsid}, function (data) {
+                    cont.html(data);
+                });
+                update_nav_bar();
+            }
+        });
+    });
+
+    $(".back").click(function(e) {
+        $.get('${base}/dashboard/workspace_manager', function (data) {
+            $(".content", "#dialog_cc").html(data);
+        });
+    });
+
+    $(".arc").click(function(e) {
+        var el = $(e.target);
+        var grpId = el.parent().parent().attr('dbid');
+        var cont = $("#dialog_cc").find(".content");
+
+        $.get('${base}/dashboard/group_manage_panel', {grpId: grpId, workspaceId: $workspace.id, type:1}, function(data) {
+            cont.html(data);
+        });
+    })
+    $(".del").click(function(e) {
+        var el = $(e.target);
+        var dbId = el.parent().parent().attr('dbid');
+        if(!confirm('Delete this dashboard?')) return;
+
+        var cont = $("#dialog_cc").find(".content");
+
+        $.post('${base}/dashboard/delete_db_from_ws', {workspaceId: $workspace.id, dashboardId: dbId}, function (apiResult) {
+            if(apiResult.statusCode == -1)  {
+                alert(apiResult.statusMessage);
+            }
+            else {
+                var cont = $("#dialog_cc").find(".content");
+
+                $.get('${base}/dashboard/public_db_manager', {wsId:$workspace.id}, function (data) {
+                    cont.html(data);
+                });
+                update_nav_bar();
+            }
+
+        });
+    })
+
+</script>

@@ -1,0 +1,157 @@
+#* @vtlvariable name="data"     type="com.webex.qd.widget.DailyChangesWidget.Data" *#
+<link type="text/css" rel="stylesheet" href="${base}/css/jquery.plugins.css"/>
+#set($basePath = $request.getScheme()+"://"+$request.getServerName()+":" +$request.getServerPort())
+#set($isWeekly=false)
+#if($data.getConfig().type=="5" || $data.getConfig().type=="7")
+    #if( $data.getConfig().type=="7")
+        #set($isWeekly=true)
+    #end
+    #if($data.getChangeLog().size()>0)
+
+    <table id="daily_changes" class="tbl">
+        <thead>
+        <tr style="font-weight:bold">
+            <th >#if($isWeekly)
+                    Week(First Day in Week)
+                #else
+                    Month
+                #end
+            </th>
+        ##        <td class="border-thin">repo</td>
+        ##        <td class="border-thin">branch</td>
+        ##        <td class="border-thin">user</td>
+            <th class="num">Added</th>
+            <th class="num" style="display: none">Modified</th>
+            <th class="num">Deleted</th>
+        </tr>
+        </thead>
+        <tbody>
+            #set($totalAdd =0)
+            #set($totalModified =0)
+            #set($totalDelete =0)
+            #foreach($row in $data.getChangeLog())
+            <tr>
+                <td >#if(!$isWeekly)
+                    $data.date2str($row.time)
+                #else
+                    $data.date2strYYYYMMDD($row.time)
+                #end</td>
+            ##            <td width="400px">$row.repo</td>
+            ##            <td width="400px">$row.branch</td>
+            ##            <td width="400px">$row.user</td>
+                <td class="num" >$row.add</td>
+                <td class="num" style="display: none">$row.modified</td>
+                <td class="num">$row.delete</td>
+                #set($totalAdd =$totalAdd+$row.add)
+                #set($totalModified =$totalModified+$row.modified)
+                #set($totalDelete =$totalDelete+$row.delete)
+            </tr>
+            #end
+            #if($data.getChangeLog().size()>0)
+            <tr style="font-weight:bold">
+                <td>Total</td>
+            ##            <td>-</td>
+            ##            <td>-</td>
+            ##            <td>-</td>
+                <td class="num">$totalAdd</td>
+                <td class="num" style="display: none">$totalModified</td>
+                <td class="num">$totalDelete</td>
+            </tr>
+            #end
+        </tbody>
+    </table>
+    <img src="$base/widget/daily_changes/chart?limitNum=$!data.getConfig().limitNum&type=$data.getConfig().type&url=$basePath&fromTime=$!data.getConfig().fromTime&toTime=$!data.getConfig().toTime&repo=$!data.getConfig().repo&branch=$!data.getConfig().branch&user=$!data.getConfig().user">
+
+#else
+there is no data!
+#end
+
+#elseif($data.getConfig().type=="6")
+
+    #if($data.getChangeLog().size()>0)
+
+    <table id="daily_changes" class="tbl">
+        <thead>
+        <tr style="font-weight:bold">
+            <th >User</th>
+            <th >Time</th>
+            <th >Added</th>
+            <th >Deleted</th>
+        </tr>
+        </thead>
+        <tbody>
+            #set($lastRowUser ="")
+            #set($perAddedTotal=0)
+            #set($perDeletedTotal=0)
+            #set($addedTotal=0)
+            #set($deletedTotal=0)
+            #foreach($row in $data.getChangeLog())
+
+                ##last user total
+                #if($lastRowUser !=$row.user && $lastRowUser!="")
+                <tr style="font-weight:bold">
+                    <th>
+                    </th>
+                    <th>Total</th>
+                    <th class="num">$perAddedTotal</th>
+                    <th class="num">$perDeletedTotal</th>
+                </tr>
+
+                #end
+
+                <tr>
+                    <td>
+                        #if($lastRowUser !=$row.user)
+                            $row.getUser()
+                        #end
+                    </td>
+                    <td>$data.date2str($row.getTime())</td>
+                    <td class="num">$row.getAdd()</td>
+                    <td class="num">$row.getDelete()</td>
+                </tr>
+
+                ## sum reset
+                #if($lastRowUser !=$row.user && $lastRowUser!="")
+                    ##set Alltotal
+                    #set($addedTotal=$addedTotal+$perAddedTotal)
+                    #set($deletedTotal=$deletedTotal+$perDeletedTotal)
+                    #set($perAddedTotal=0)
+                    #set($perDeletedTotal=0)
+                #end
+
+                ##sum
+                #set($perAddedTotal=$perAddedTotal+$row.add)
+                #set($perDeletedTotal=$perDeletedTotal+$row.delete)
+                ##user end set the user
+                #set($lastRowUser =$row.user)
+        #end
+        <tr style="font-weight:bold">
+            <th >
+            </th>
+            <th>Total</th>
+            <th class="num">$perAddedTotal</th>
+            <th class="num">$perDeletedTotal</th>
+        </tr>
+
+        #set($addedTotal=$addedTotal+$perAddedTotal)
+        #set($deletedTotal=$deletedTotal+$perDeletedTotal)
+
+        <tr style="font-weight:bold">
+            <th colspan="2">
+                All Total
+            </th>
+            <th class="num">$addedTotal</th>
+            <th class="num">$deletedTotal</th>
+        </tr>
+
+        </tbody>
+    </table>
+    <img src="$base/widget/daily_changes/chart?limitNum=$!data.getConfig().limitNum&type=6&url=$basePath&fromTime=$!data.getConfig().fromTime&toTime=$!data.getConfig().toTime&repo=$!data.getConfig().repo&branch=$!data.getConfig().branch&user=$!data.getConfig().user">
+
+    #else
+    there is no data!
+    #end
+
+
+
+#end

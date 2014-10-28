@@ -1,0 +1,199 @@
+
+.widget-place {
+    width: 49.99%;
+    overflow: hidden;
+    padding-bottom: 30px;
+}
+
+.widget-place {
+    margin: 0;
+    padding: 0;
+    float: left;
+    height: auto;
+    list-style: none;
+    min-height: 400px;
+}
+
+.widget-placeholder {
+    color: #000;
+    margin: 1em;
+    background-color: #F5F5F5;
+}
+
+.widget {
+    margin: 10px 10px 15px 10px;
+    /*border: #DFDFDF solid 1px;*/
+    /*border: #33b4e4 solid 1px;*/
+    border: #0D5995 solid 1px;
+
+    /*border-radius: 4px;*/
+    /*box-shadow: 0 1px 0 #FFFFFF inset;*/
+
+
+    -webkit-border-radius: 0 0 6px 6px;
+    -moz-border-radius: 0 0 6px 6px;
+    border-radius: 6px;
+    -webkit-box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+    -moz-box-shadow: 0 3px 10px rgba(0,0,0,0.35);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+    top:0px;
+    left: 0px;
+    width:98%;
+    height: 100%;
+}
+
+.widget-header {
+    border-radius: 6px 6px 0 0;
+    -webkit-border-radius: 6px 6px 0 0;
+    -moz-border-radius: 6px 6px 0 0;
+    color: #000;
+    height: 30px;
+    line-height: 30px;
+
+    border:0px solid transparent;
+    overflow: hidden;
+}
+
+.widget-gradient {
+    height: 28px;
+    line-height: 28px;
+    background: #99bbdd;
+    background: -webkit-gradient(linear, left top, left bottom, from(#ccddff), to(#99bbdd));
+    background: -moz-linear-gradient(top, #ccddff, #99bbdd);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ccddff', endColorstr='#99bbdd');
+}
+
+.widget-editbox {
+    color: #000;
+    margin: 0.2em;
+    padding: 0.2em;
+    /*background-color: yellow;*/
+}
+
+.widget-menu {
+    float: right;
+    padding-right: 10px;
+    top: 0;
+}
+
+.widget-menu a {
+    margin-top: 5px;
+    font-weight: bold;
+}
+
+.widget-menu a:hover {
+    /*margin-top: 3px;*/
+    color: #f00;
+}
+
+.widget-title {
+    padding-left: 10px;
+}
+
+.widget-content {
+    padding: 0.5em;
+}
+
+div#ajax-progress {
+    top: 0.2em;
+    color: #fff;
+    right: 0.2em;
+    display: none;
+    padding: 0.2em;
+    position: fixed;
+    font-weight: bold;
+    background-color: red;
+}
+
+div#callbacks-console {
+    clear: right;
+    color: lime;
+    height: 100px;
+    overflow: auto;
+    padding: 0.5em;
+    margin: 1em 0 0 0;
+    line-height: normal;
+    background-color: #000;
+    border: silver solid 2px;
+}
+
+
+
+
+
+
+
+.widget-placeholder {
+    border: #000 dashed 1px;
+    min-height: 100px;
+}
+
+
+.widget-dropdown-icon {
+    width: 18px;
+    height: 18px;
+    background-repeat: no-repeat;
+    background-image: url('./images/gear-hover-icon.png');
+    margin-top: 5px;
+    float: right;
+    cursor: pointer;
+}
+
+
+.widget-savelink {
+    width: 18px;
+    height: 18px;
+    background-repeat: no-repeat;
+    background-image: url('./images/save.png');
+    margin-left: 0;
+    float: right;
+    cursor: pointer;
+}
+
+.widget-cancellink {
+    width: 18px;
+    height: 18px;
+    background-repeat: no-repeat;
+    background-image: url('./images/xfce_system_exit.png');
+    margin-left: 0;
+    float: right;
+    cursor: pointer;
+}
+
+.widget-dropdown-menu {
+    border: 1px solid rgb(13, 89, 149);
+    background: white;
+    -webkit-box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+    -moz-box-shadow: 0 3px 10px rgba(0,0,0,0.35);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+    padding: 3px;
+}
+
+.widget-dropdown-menu li {
+    padding: 0px 2px;
+    list-style: none;
+    line-height: 18px;
+}
+
+.widget-dropdown-menu li a {
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: normal;
+    word-break: keep-all;
+    line-break: normal;
+    padding-left: 20px;
+    background-repeat: no-repeat;
+    white-space: nowrap;
+    background-position: 2px 2px;
+}
+
+.widget-editlink {
+    background-image: url("./images/Pencil.png");
+}
+
+.widget-closelink {
+    background-image: url('./images/Bin.png');
+}
+.widget-newtablink {
+    background-image: url('./images/Browser.png');
+}

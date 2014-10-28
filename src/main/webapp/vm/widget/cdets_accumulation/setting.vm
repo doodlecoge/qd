@@ -1,0 +1,144 @@
+#* @vtlvariable name="setting" type="com.webex.qd.widget.CdetsAccumulationWidget.Configuration" *#
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <link type="text/css" rel="stylesheet" href="${base}/css/jquery-ui-1.8.22.custom.css"/>
+    <link type="text/css" rel="stylesheet" href="${base}/css/common.css"/>
+    <link type="text/css" rel="stylesheet" href="${base}/css/sort_tbl.css"/>
+
+    <script type="text/javascript" src="${base}/script/jquery172.js"></script>
+    <script type="text/javascript" src="${base}/script/jquery-ui-1.8.22.custom.min.js"></script>
+
+    <script type="text/javascript" src="${base}/script/common.js"></script>
+    <script type="text/javascript" src="${base}/script/cdets/jquery.artDialog.min.js"></script>
+    <script type="text/javascript" src="${base}/script/cdets/artDialog.qd.plugins.js"></script>
+    <link type="text/css" rel="stylesheet" href="${base}/css/cdets/blue.css"/>
+    <link type="text/css" rel="stylesheet" href="${base}/css/setting_common.css" />
+
+    <script type="text/javascript">
+        function addQuery() {
+
+            var html = '' +
+                    '<tr>' +
+                    '   <td>' +
+                    '       <input type="text" name="name" />' +
+                    '   </td>' +
+                    '   <td>' +
+                    '       <input type="text" name="query" />' +
+                    '   </td>' +
+                    '   <td>' +
+                    '       <a href="javascript:void(0);" class="btn01">Delete</a>' +
+                    '   </td>' +
+                    '</tr>';
+            var qddts_tbl = $("#qddts_tbl");
+            qddts_tbl.find("tbody").append(html);
+            qddts_tbl.find("tbody tr:last-child td:eq(1) input").attr("label","Qddts Queries").bindEditor();
+            resize();
+        }
+        function getSettings() {
+            var config = {};
+
+            config.name = $.trim($("#name").val());
+            config.queries = [];
+
+            $("#qddts_tbl").find("tbody").find("tr").each(function (i, tr) {
+                tr = $(tr);
+                var name = tr.find('input:text:first').val();
+                var query = tr.find('input:text:eq(1)').val();
+                name = $.trim(name);
+                query = $.trim(query);
+                config.queries.push({name: name, query: query});
+            });
+
+//            config.project = $.trim($("#project").val());
+//            config.product= $.trim($("#product").val());
+//            config.severity = $.trim($("#severity").val());
+//            config.version = $.trim($("#version").val());
+//            config.tobefixed = $.trim($("#tobefixed").val());
+
+            return config;
+        }
+
+        $(function () {
+//            $("form input:text").addClass("text")
+//                    .addClass("ui-corner-all")
+//                    .addClass("ui-widget-content");
+            var qddts_table = $("#qddts_tbl");
+            if(qddts_table.find("tbody tr").length == 0){
+                addQuery();
+            }
+            qddts_table.click(function(e) {
+                var el = $(e.target);
+                if(!el.hasClass('btn01')) return;
+                el.parent().parent().remove();
+            })
+            $.each(qddts_table.find("tbody tr input[name=query]"), function (i, val) {
+                $(val).attr("label","Qddts Queries").bindEditor();
+            });
+            resize();
+        });
+
+
+
+    </script>
+
+
+</head>
+
+<body>
+<form onsubmit="return false;">
+    <ul>
+        <li>
+            <span>Widget Name:</span><br/>
+            <input id="name" name="name" type="text" style="width: 90%" value='$name'/>
+        </li>
+
+
+        <li>
+            <span>Qddts Queries:</span>
+            <table id="qddts_tbl">
+                <colgroup>
+                    <col style="width: 150px;"/>
+                    <col/>
+                    <col style="width: 100px;"/>
+                </colgroup>
+
+
+                <thead>
+                <th>Display Name:</th>
+                <th>Qddts Queries</th>
+                <th></th>
+                </thead>
+
+
+                <tbody>
+                    #foreach($q in $setting.getQueries())
+                    <tr>
+                        <td>
+                            <input type="text" name="name" value='$q.name'/>
+                        </td>
+                        <td>
+                            <input type="text" name="query" value='$q.query'/>
+                        </td>
+                        <td>
+                            <button class="btn01">Delete</button>
+                        </td>
+                    </tr>
+                    #end
+                </tbody>
+            </table>
+            <div align='right' style="height: 35px;margin-top: 10px">
+                <a href="javascript:void(0);" class="btn01" onclick="addQuery();">Add More ...</a>
+            </div>
+        </li>
+
+
+    </ul>
+
+</form>
+<a target="_blank" href="$base/help/cdets-acc/index.html" class="setting-help"></a>
+
+</body>
+</html>

@@ -1,0 +1,140 @@
+#* @vtlvariable name="dashboard"     type="com.webex.qd.vo.Dashboard" *#
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <title>Home Page</title>
+
+    <META HTTP-EQUIV="CACHE-CONTROL" CONTENT="NO-CACHE">
+    <META HTTP-EQUIV="PRAGMA" CONTENT="NO-CACHE">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+    <link rel="stylesheet" type="text/css" media="screen" href="${base}/css/example.css?t=${ver}"/>
+    <style type="text/css">
+        .ui-widget {
+            font-size: 12px;
+        }
+
+        .ui-autocomplete {
+            max-height: 200px;
+            overflow-y: auto;
+            /* prevent horizontal scrollbar */
+            overflow-x: hidden;
+        }
+
+
+    </style>
+
+
+
+
+    <script type="text/javascript">
+        var dbid = null;
+        var proj_codes = null;
+
+
+        $.ajaxSetup({
+            dataType: "text"
+        });
+
+        function full_screen() {
+            var hWin = $(window).height();
+
+            var foot = $("#wpfoot");
+            var hFoot = foot.outerHeight();
+            var hHead = $("#wphead").outerHeight();
+//            var hNav = $("#nav_bar").outerHeight();
+            var hNav = $("#nav_cc").outerHeight();
+
+            var off = foot.offset();
+
+            $("#wpcontent").css("min-height", (hWin - hFoot - hHead - hNav) + "px");
+        }
+
+        $(document).ready(full_screen);
+        $(window).bind("resize", full_screen);
+
+        $(document).ready(function () {
+
+            jQuery.ajaxSetup({cache: false});
+
+            setTimeout(function () {
+                $("img#wbx_ball").addClass("start");
+            }, 1000);
+
+
+
+        ##########################################################
+        ## dialog close button
+            $("#dialog_cc .close").click(hideDialog);
+        });
+        function showDialog(title,min_height){
+            min_height = min_height||500;
+
+            title = title || "DIALOG";
+
+            var mask = $("#mask_cc");
+            var dlg = $("#dialog_cc");
+
+            mask.css('visibility', 'visible');
+            dlg.css('visibility', 'visible');
+
+            dlg.find("a.txt").html(title);
+            dlg.find(".content").html('loading...');
+
+            var win = $(window);
+            var w = win.width();
+            var h = win.height();
+
+            var ww = Math.max(800, w * 0.68);
+            var hh = Math.max(min_height, h * 0.68);
+            console.log(hh)
+            dlg.width(ww);
+            dlg.height(hh);
+            dlg.css('margin-left', '-' + (ww / 2) + 'px');
+            dlg.css('margin-top', '-' + (hh / 2) + 'px');
+
+            dlg.find(".content").height(hh - 100);
+        }
+
+
+        function hideDialog() {
+            $("#mask_cc").css('visibility', 'hidden');
+            $("#dialog_cc").css('visibility', 'hidden');
+        }
+    </script>
+
+
+
+
+</head>
+<body>
+<div id="wpwrap">
+    #parse("dashboard/head.vm")
+
+    <div id="wpnav">
+        #parse("dashboard/nav.vm")
+    </div>
+
+    <div id="wpcontent">
+        <div id="wpbody">
+            NO DASHBOARD FOUND
+        </div>
+    </div>
+
+    <div class="clear"></div>
+
+    #parse("dashboard/foot.vm")
+
+## mask
+    <div id="mask_cc" class="t30"></div>
+
+## dialog
+    <div id="dialog_cc">
+        <div class="title">
+            <a href="javascript:void(0)" class="close">Close</a>
+            <a href="javascript:void(0)" class="txt">Search Results</a>
+        </div>
+        <div class="content"></div>
+    </div>
+</body>

@@ -1,0 +1,186 @@
+<style type="text/css">
+    ul#user_lst {
+        padding: 0;
+        margin: 0;
+    }
+
+    ul#user_lst li {
+        list-style: none;
+        text-decoration: none;
+        color: inherit;
+        border: 1px solid #69c;
+        padding: 2px 5px;
+        margin-right: 5px;
+        margin-bottom: 5px;
+        font-weight: bold;
+
+        background: #eee;
+        background: -webkit-gradient(linear, left top, left bottom, from(white), to(#E7E7E7));
+        background: -moz-linear-gradient(top, white, #E7E7E7);
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr = '#FFFFFF', endColorstr = '#E7E7E7');
+    }
+
+    ul#user_lst li a {
+        text-decoration: none;
+        padding-left: 5px;
+        color: #f33;
+    }
+
+    ul#user_lst li a:hover {
+        color: #69c;
+    }
+</style>
+
+<ul id="user_lst">
+##    <li class="inline-block">
+##        abcddddd<a href="javascript:void(0)">&times;</a>
+##    </li>
+</ul>
+
+<div style="margin: 10px 0">
+    <input type="text" id="user_ac_box" style="width: 50%"/>
+
+    <div style="height:5px;"></div>
+
+    <a href="javascript:void(0)" class="btn01">Add Administrators</a>
+
+    <div style="height:50px;"></div>
+    <div>If you can't find the user above,please enter the CEC id below</div>
+    <input type="text" id="user_ac_box_2" style="width: 50%" >
+    <div style="height:5px;"></div>
+    <a href="javascript:void(0)" class="btn01" id="user_ac_box_2_btn">Add Administrators</a>
+
+</div>
+<script type="text/javascript">
+    (function () {
+
+        var ul = $("#user_lst");
+
+        function add_user(id, name, fname) {
+            var param = {uid: id, dbid: dbid, role: 0};
+            $.get('${base}/dashboard/add_db_user', param, function (data) {
+                add_user_item(id, name, fname);
+                refreshDashboardHeader(dbid);
+            });
+
+        }
+
+        function add_user_item(id, name, fname) {
+            var li = $('<li class="inline-block" uid="' + id + '">' + fname + '(' + name + ')'
+                    + '<a href="javascript:void(0)">&times;</a></li>');
+
+            ul.append(li);
+        }
+
+        var pp = {dbid: dbid, role: 0};
+
+        $.get('${base}/dashboard/get_db_user', pp, function (data) {
+            var d = eval('(' + data + ')');
+
+            $.each(d, function (i, user) {
+                add_user_item(user.id, user.name, user.fname);
+            });
+        });
+
+
+        $("#user_ac_box").autocomplete({
+            source: function(req, resp) {
+                var term = req.term.toLowerCase();
+                var except = [];
+                $("#user_lst li").each(function(i, el) {
+                    except.push($(el).attr('uid'));
+                });
+
+                if(!!window.all_users) {
+                    var ret = [];
+
+                    $.each(window.all_users, function(idx, user) {
+                        var id = user.id;
+                        var name = user.name.toLowerCase();
+                        var fname = user.fname.toLowerCase();
+
+                        var ex_len = except.length;
+                        for(var i = 0; i < ex_len; i++) {
+                            if(user.id == except[i]) return;
+                        }
+
+                        if(name.indexOf(term) != -1 || fname.indexOf(term) != -1)
+                            ret.push({
+                                label: user.fname + '(' + user.name + ')',
+                                id: id,
+                                name: user.name,
+                                fname: user.fname
+                            });
+                    });
+
+                    resp(ret);
+                } else {
+                    $.get("${base}/dashboard/get_all_users", function(data) {
+                        window.all_users = eval('(' + data + ')');
+
+                        var ret = [];
+
+                        $.each(window.all_users, function(idx, user) {
+                            var id = user.id;
+                            var name = user.name.toLowerCase();
+                            var fname = user.fname.toLowerCase();
+
+                            var ex_len = except.length;
+                            for(var i = 0; i < ex_len; i++) {
+                                if(user.id == except[i]) return;
+                            }
+
+                            if(name.indexOf(term) != -1 || fname.indexOf(term) != -1)
+                                ret.push({
+                                    label: user.fname + '(' + user.name + ')',
+                                    id: id,
+                                    name: user.name,
+                                    fname: user.fname
+                                });
+                        });
+
+                        resp(ret);
+                    });
+                }
+            },
+            select: function(event, ui) {
+                add_user(ui.item.id, ui.item.name, ui.item.fname);
+                $("#user_ac_box").val('');
+                return false;
+            }
+        });
+
+
+        ul.click(function(e) {
+            var el = $(e.target);
+            if(e.target.nodeName.toLowerCase() == "a") {
+                var uid = $(e.target).parent().attr('uid');
+                if(!uid)
+                    return;
+                var param = {uid: uid, dbid: dbid, role: 0};
+                $.get('${base}/dashboard/del_db_user', param, function (data) {
+                    el.parent().remove();
+                    refreshDashboardHeader(dbid);
+                });
+            }
+        });
+
+        $("#user_ac_box_2_btn").click(function(){
+            var cecID = $("input[id='user_ac_box_2']").val();
+
+            var param = {cecid: cecID, dbid: dbid, role: 0};
+            if(cecID != ""){
+
+                //find user exist or not
+                $.get("${base}/dashboard/get_CECInfo",param, function(data) {
+
+                    var result = eval('(' + data + ')');
+                    add_user(result[0].id,result[0].name,result[0].fname);
+                    $("#user_ac_box").val('');
+                    return false;
+                });
+            }
+        });
+
+    })();
+</script>

@@ -1,0 +1,200 @@
+#* @vtlvariable name="dashboard"     type="com.webex.qd.vo.Dashboard" *#
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <title>Home Page</title>
+
+    <META HTTP-EQUIV="CACHE-CONTROL" CONTENT="NO-CACHE">
+    <META HTTP-EQUIV="PRAGMA" CONTENT="NO-CACHE">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+    <link rel="stylesheet" type="text/css" media="screen" href="${base}/css/example.css?t=${ver}"/>
+    <style type="text/css">
+        .ui-widget {
+            font-size: 12px;
+        }
+
+        .ui-autocomplete {
+            max-height: 200px;
+            overflow-y: auto;
+            /* prevent horizontal scrollbar */
+            overflow-x: hidden;
+        }
+
+
+    </style>
+
+
+
+
+    <script type="text/javascript">
+        var dbid = "$dashboard.id";
+        var proj_codes = null;
+
+
+        $.ajaxSetup({
+            dataType: "text"
+        });
+
+        function full_screen() {
+            var hWin = $(window).height();
+
+            var foot = $("#wpfoot");
+            var hFoot = foot.outerHeight();
+            var hHead = $("#wphead").outerHeight();
+//            var hNav = $("#nav_bar").outerHeight();
+            var hNav = $("#nav_cc").outerHeight();
+
+            var off = foot.offset();
+
+            $("#wpcontent").css("min-height", (hWin - hFoot - hHead - hNav) + "px");
+        }
+
+        $(document).ready(full_screen);
+        $(window).bind("resize", full_screen);
+
+        $(document).ready(function () {
+
+            jQuery.ajaxSetup({cache: false});
+
+            setTimeout(function () {
+                $("img#wbx_ball").addClass("start");
+            }, 1000);
+
+
+
+        ##########################################################
+        ## dialog close button
+            $("#dialog_cc .close").click(hideDialog);
+        });
+
+        function showDialog(title,min_height) {
+            title = title || "DIALOG";
+
+            var mask = $("#mask_cc");
+            var dlg = $("#dialog_cc");
+
+            mask.css('visibility', 'visible');
+            dlg.css('visibility', 'visible');
+
+            dlg.find("a.txt").html(title);
+            dlg.find(".content").html('loading...');
+
+            var win = $(window);
+            var w = win.width();
+            var h = win.height();
+
+            var ww = Math.max(800, w * 0.68);
+            var hh = Math.max(min_height?min_height:500, h * 0.68);
+
+            dlg.width(ww);
+            dlg.height(hh);
+            dlg.css('margin-left', '-' + (ww / 2) + 'px');
+            dlg.css('margin-top', '-' + (hh / 2) + 'px');
+
+            dlg.find(".content").height(hh - 100);
+        }
+
+        function hideDialog() {
+            $("#mask_cc").css('visibility', 'hidden');
+            $("#dialog_cc").css('visibility', 'hidden');
+        }
+
+        function showAddWidgetDialog() {
+            showDialog("Add New Widget",625);
+            var cont = $("#dialog_cc").find(".content");
+            cont.html('');
+            $.get('${base}/dashboard/widget_panel', function(data) {
+                cont.html(data);
+            });
+        }
+        function showCopyDashBoard() {
+            showDialog("Copy Current DashBoard",625);
+            var cont = $("#dialog_cc").find(".content");
+            cont.html('');
+            $.get('${base}/dashboard/copy_db_panel', function(data) {
+                cont.html(data);
+            });
+        }
+
+        function showUserManagementDialog() {
+            showDialog("Add / Remove Dashboard Administrators");
+            var cont = $("#dialog_cc").find(".content");
+            cont.html('');
+            $.get('${base}/dashboard/user_panel', function(data) {
+                cont.html(data);
+            });
+        }
+
+        function refreshDashboardHeader(dashboardId) {
+            $.get('${base}/dashboard/header/' + dashboardId, function(data) {
+                $('#dashboard_header').html(data);
+            });
+        }
+
+        function toggleFav(dashboardId) {
+            $.get('${base}/dashboard/toggle_fav', {dbid: dashboardId}, function (apiResult) {
+                if (apiResult.success) {
+                    update_nav_bar();
+                    refreshDashboardHeader(dashboardId);
+                } else {
+                    alert('add favorite failed');
+                }
+            }, "json");
+        }
+    </script>
+
+    <script type="text/javascript">
+        var __DashboardId__ = 0;
+
+        try {
+            __DashboardId__ = $dashboard.id;
+        } catch (e) {
+        }
+    </script>
+
+    <script type="text/javascript">
+        function resizeIfrmById(id) {
+            var iFrameID = document.getElementById('frame' + id);
+            iFrameID.height = iFrameID.contentWindow.document.body.scrollHeight;
+        }
+
+        $(document).ready(function () {
+//            $("iframe").lazyload({appear : lazyLoadIframe, skip_invisible : false});
+        });
+    </script>
+</head>
+<body>
+<div id="wpwrap">
+    #parse("dashboard/head.vm")
+
+    <div id="wpnav">
+        #parse("dashboard/nav.vm")
+    </div>
+
+    <div id="wpcontent">
+        <div id="dashboard_header" style="clear: both">
+            #parse("dashboard/admins.vm")
+        </div>
+        <div id="wpbody" style="clear:both;">
+            #parse("dashboard/body.vm")
+        </div>
+    </div>
+
+    <div class="clear"></div>
+
+    #parse("dashboard/foot.vm")
+
+## mask
+    <div id="mask_cc" class="t30"></div>
+
+## dialog
+    <div id="dialog_cc">
+        <div class="title">
+            <a href="javascript:void(0)" class="close">Close</a>
+            <a href="javascript:void(0)" class="txt">Search Results</a>
+        </div>
+        <div class="content"></div>
+    </div>
+</body>

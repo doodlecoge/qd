@@ -1,0 +1,129 @@
+#* @vtlvariable name="setting" type="com.webex.qd.widget.TimsAutomationCaseStatsWidget.Configuration" *#
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <script type="text/javascript" src="${base}/script/jquery172.js"></script>
+    <script type="text/javascript" src="${base}/script/jquery.form.min.js"></script>
+    <script type="text/javascript" src="${base}/script/common.js"></script>
+
+    <link type="text/css" rel="stylesheet" href="${base}/css/common.css" />
+    <link type="text/css" rel="stylesheet" href="${base}/css/setting.css" />
+    <link type="text/css" rel="stylesheet" href="${base}/css/setting_common.css" />
+    <script type="text/javascript">
+        $(function() {
+            var tims_lst = $("#tims_lst");
+            tims_lst.click(function(e) {
+                var el = $(e.target);
+                if(el.hasClass('del')) el.parent().parent().remove();
+            });
+            if(tims_lst.find("tbody tr").length == 0){
+                addNewRow(0);
+                resizeIfrmSize("setting");
+            }
+            $("#add").click(function() {
+                var maxIdx = $("#tims_lst tbody tr").last().attr("eidx");
+                var newIdx = 1;
+                if (maxIdx != null) {
+                    newIdx = parseInt(maxIdx) + 1;
+                }
+
+                addNewRow(newIdx);
+                resizeIfrmSize("setting");
+            });
+
+        });
+
+        function addNewRow(idx) {
+            var tr = $('<tr></tr>');
+            tr.attr("eidx", idx);
+
+            var nameTd = $('<td><input name="" type="text" style="width: 90%" class="text ui-corner-all ui-widget-content"></td>');
+            nameTd.children().first().attr("name", "configEntries[" + idx + "].displayName");
+            tr.append(nameTd);
+
+            var automatedTd = $('<td><input name="" type="text" style="width: 90%" class="text ui-corner-all ui-widget-content"></td>');
+            automatedTd.children().first().attr("name", "configEntries[" + idx + "].automatedSearchId");
+            tr.append(automatedTd);
+
+            var manualTd = $('<td><input name="" type="text" style="width: 90%" class="text ui-corner-all ui-widget-content"></td>');
+            manualTd.children().first().attr("name", "configEntries[" + idx + "].notAutomatedSearchId");
+            tr.append(manualTd);
+
+            var tobeAutomatedTd = $('<td><input name="" type="text" style="width: 90%" class="text ui-corner-all ui-widget-content"></td>');
+            tobeAutomatedTd.children().first().attr("name", "configEntries[" + idx + "].tobeAutomatedSearchId");
+            tr.append(tobeAutomatedTd);
+
+            var deleteButton = $('<td><a class="btn01 del" href="javascript:void(0)">Delete</a></td>');
+            tr.append(deleteButton);
+            $("#tims_lst tbody").append(tr);
+        }
+
+        function deleteRow() {
+
+        }
+    </script>
+</head>
+<body>
+<form id="jsonForm" action="save" method="post">
+    <ul>
+        <li>
+            <span>Widget Name:</span><br>
+            <label for="name"></label><input type="text" value="$name" style="width: 90%" name="name" id="name" class="text ui-corner-all ui-widget-content">
+        </li>
+
+        <li>
+            <span>TIMS Settings:</span>
+            <table class="tbl" id="tims_lst" width="100%">
+                <thead>
+                <tr>
+                    <th>Display Name<i class="req"></i></th>
+                    <th>Automated Case Search ID<i class="req"></i><a target="_blank" href="${base}/help/tims_ta_stats/search.html" title="What's This?"><img src="${base}/images/icon_help.gif"></a></th>
+                    <th>Manual Case Search ID<i class="req"></i><a target="_blank" href="${base}/help/tims_ta_stats/search.html" title="What's This?"><img src="${base}/images/icon_help.gif"></a></th>
+                    <th>ToBe Automated Case Search ID (optional)<a target="_blank" href="${base}/help/tims_ta_stats/search.html" title="What's This?"><img src="${base}/images/icon_help.gif"></a></th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                    #set($idx = 0)
+                    #if($setting.configEntries.size() >0)
+                        #foreach($entry in $setting.configEntries)
+                        <tr eidx='$idx'>
+                            <td>
+                                <input name="configEntries[$idx].displayName" type="text" style="width: 90%"
+                                       class="text ui-corner-all ui-widget-content" value="$entry.displayName">
+                            </td>
+                            <td>
+                                <input name="configEntries[$idx].automatedSearchId" type="text" style="width: 90%"
+                                       class="text ui-corner-all ui-widget-content" value="$entry.automatedSearchId">
+                            </td>
+                            <td>
+                                <input name="configEntries[$idx].notAutomatedSearchId" type="text" style="width: 90%"
+                                       class="text ui-corner-all ui-widget-content" value="$entry.notAutomatedSearchId">
+                            </td>
+                            <td>
+                                <input name="configEntries[$idx].tobeAutomatedSearchId" type="text" style="width: 90%"
+                                       class="text ui-corner-all ui-widget-content" value="$entry.tobeAutomatedSearchId">
+                            </td>
+                            <td><a class="btn01 del" href="javascript:void(0)">Delete</a></td>
+                        </tr>
+                            #set($idx = $idx + 1)
+                        #end
+                    #else
+
+                    #end
+                </tbody>
+                <tfoot>
+                <tr style="min-height: 35px; height: 35px;">
+                    <td colspan="5" style="text-align: right;">
+                        <a href="javascript:void(0)" class="btn01" id="add">Add More ...</a>
+                    </td>
+                </tr>
+                </tfoot>
+            </table>
+        </li>
+    </ul>
+</form>
+</body>
+</html>

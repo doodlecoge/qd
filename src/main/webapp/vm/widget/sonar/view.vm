@@ -1,0 +1,337 @@
+#* @vtlvariable name="data"     type="com.webex.qd.widget.SonarWidget.Data" *#
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <link type="text/css" rel="stylesheet" href="${base}/css/sonar/nav.css"/>
+    <link type="text/css" rel="stylesheet" href="${base}/css/sonar/sonar_simple.css"/>
+##    <script type="text/javascript" src="${base}/script/jquery172.js"></script>
+    <script type="text/javascript" src="${base}/script/common.js"></script>
+    <script type="text/javascript" src="${base}/script/sonar/sonar.js"></script>
+    <script type="text/javascript">
+        var j = jQuery.noConflict();
+        j(function () {
+            resizeIfrmSizeJ($widget.id, j);
+        });
+    </script>
+
+</head>
+<body>
+
+#if((!$data) || ($data.sonars.size() == 0))
+<div>
+    <div style="height: 100px; line-height: 100px; text-align: center;">
+        Nothing to show, Please config the widget first.
+    </div>
+</div>
+#else
+<table width="100%">
+<tr><td>
+    <div id="source_tabs">
+        <ul class="tabs" id="nav">
+            #set($idx = 0)
+            #foreach($sonar in $data.sonars)
+                <li>
+                    #if($sonar == $data.selected)
+                        <a class="selected" href="${base}/widget/sonar/view/$widget.id?projectIndex=$idx">$sonar.name
+                            #if($data.child)
+                                ($data.child.name)
+                            #end
+                        </a>
+                    #else
+                        <a class="" href="${base}/widget/sonar/view/$widget.id?projectIndex=$idx">$sonar.name</a>
+                    #end
+                    #set($cidx = 0)
+                    #if ($sonar.hasChild())
+                        <ul>
+                            #foreach($child in $sonar.groups)
+                                <li><a class="dp" href="${base}/widget/sonar/view/$widget.id?projectIndex=$idx&cIndex=$cidx">$child.name</a></li>
+                                #set($cidx = $cidx + 1)
+                            #end
+                        </ul>
+                    #end
+                </li>
+                #set($idx = $idx + 1)
+            #end
+        </ul>
+    </div>
+</td></tr>
+<tr><td>
+#set($resource = $data.resource)
+#if ($data.child)
+    #set($sonar_config = $data.child)
+#else
+    #set($sonar_config = $data.selected)
+#end
+<div id="dashboard">
+<div class="block">
+<div class="widget">
+<table width="100%">
+    <tbody><tr>
+        <td width="33%" valign="top" nowrap="">
+            <div class="dashbox">
+
+                <h3>Lines of code</h3>
+                <p>
+                    <span class="big"><a title="" rel="" class="" target="_blank" href="$sonar_config.url/drilldown/measures/$sonar_config.resourceId?metric=ncloc"><span id="m_ncloc">$resource.getMeasure("ncloc").formattedValue</span></a></span>
+                </p>
+
+                <p><a target="_blank" title="" rel="" class="" href="$sonar_config.url/drilldown/measures/$sonar_config.resourceId?metric=lines"><span id="m_lines">$resource.getMeasure("lines").formattedValue</span> lines</a> </p>
+
+
+
+                <p>
+                    <a target="_blank" title="" rel="" class="" href="$sonar_config.url/drilldown/measures/$sonar_config.resourceId?metric=statements"><span id="m_statements">$resource.getMeasure("statements").formattedValue</span> statements</a> </p>
+
+
+                <p><a target="_blank" title="" rel="" class="" href="$sonar_config.url/drilldown/measures/$sonar_config.resourceId?metric=files"><span id="m_files">$resource.getMeasure("files").formattedValue</span> files</a> </p>
+
+
+            </div>
+        </td>
+        <td width="33%" valign="top">
+            <div class="dashbox">
+
+                <h3>Classes</h3>
+                <p>
+                    <span class="big"><a target="_blank" title="" rel="" class="" href="$sonar_config.url/drilldown/measures/$sonar_config.resourceId?metric=classes"><span id="m_classes">$resource.getMeasure("classes").formattedValue</span></a></span>
+                </p>
+                <p><a target="_blank" title="" rel="" class="" href="$sonar_config.url/drilldown/measures/$sonar_config.resourceId?metric=packages"><span id="m_packages">$resource.getMeasure("packages").formattedValue</span> packages</a> </p>
+
+                <p><a target="_blank" title="" rel="" class="" href="$sonar_config.url/drilldown/measures/$sonar_config.resourceId?metric=functions"><span id="m_functions">$resource.getMeasure("functions").formattedValue</span> methods</a> </p>
+
+                <p><a target="_blank" title="" rel="" class="" href="$sonar_config.url/drilldown/measures/$sonar_config.resourceId?metric=accessors"><span id="m_accessors">$resource.getMeasure("accessors").formattedValue</span> accessors</a> </p>
+            </div>
+        </td>
+
+        <td valign="top">
+            <div class="dashbox">
+                <h3>Violations</h3>
+                <div class="marginbottom10">
+<span class="big">
+<a target="_blank" title="" rel="" class="" href="$sonar_config.url/drilldown/violations/$sonar_config.resourceId"><span id="m_violations">$resource.getMeasure("violations").formattedValue</span></a></span>
+
+                </div>
+
+                <h3>Rules compliance</h3>
+                <div>
+<span class="big">
+<a target="_blank" title="" rel="" class="" href="$sonar_config.url/drilldown/measures/$sonar_config.resourceId?highlight=weighted_violations&amp;metric=weighted_violations"><span id="m_violations_density">$resource.getMeasure("violations_density").formattedValue</span></a></span>
+                </div>
+
+            </div>
+        </td>
+
+        <td valign="top" nowrap="">
+
+            <table class="clear width100">
+                <tbody><tr>
+                    <td><img src="$sonar_config.url/images/priority/BLOCKER.png?1369729533" alt="Blocker"></td>
+                    <td> &nbsp;<a target="_blank" href="$sonar_config.url/drilldown/violations/$sonar_config.resourceId?severity=BLOCKER">Blocker</a></td>
+                    <td align="right" style="padding: 0 10px;">
+                        <span id="m_blocker_violations">$resource.getMeasure("blocker_violations").formattedValue</span></td>
+                    <td align="left" style="padding-bottom:2px; padding-top:2px;">
+                        #set($wid= $data.violationPercentage($resource.getMeasure("blocker_violations").value, $resource.getMeasure("critical_violations").value, $resource.getMeasure("major_violations").value, $resource.getMeasure("minor_violations").value, $resource.getMeasure("info_violations").value, $resource.getMeasure("blocker_violations").value))
+                        <div style="width: 70px" class="barchart"><div style="width: $wid%;background-color:#777;"></div></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><img src="$sonar_config.url/images/priority/CRITICAL.png?1369729533" alt="Critical"></td>
+                    <td> &nbsp;<a target="_blank" href="$sonar_config.url/drilldown/violations/$sonar_config.resourceId?severity=CRITICAL">Critical</a></td>
+                    <td align="right" style="padding: 0 10px;">
+                        <span id="m_critical_violations">$resource.getMeasure("critical_violations").formattedValue</span></td>
+                    <td align="left" style="padding-bottom:2px; padding-top:2px;">
+                        #set($wid= $data.violationPercentage($resource.getMeasure("blocker_violations").value, $resource.getMeasure("critical_violations").value, $resource.getMeasure("major_violations").value, $resource.getMeasure("minor_violations").value, $resource.getMeasure("info_violations").value, $resource.getMeasure("critical_violations").value))
+                        <div style="width: 70px" class="barchart"><div style="width: $wid%;background-color:#777;"></div></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><img src="$sonar_config.url/images/priority/MAJOR.png?1369729533" alt="Major"></td>
+                    <td> &nbsp;<a target="_blank" href="$sonar_config.url/drilldown/violations/$sonar_config.resourceId?severity=MAJOR">Major</a></td>
+                    <td align="right" style="padding: 0 10px;">
+                        <span id="m_major_violations">$resource.getMeasure("major_violations").formattedValue</span></td>
+                    <td align="left" style="padding-bottom:2px; padding-top:2px;">
+                        #set($wid= $data.violationPercentage($resource.getMeasure("blocker_violations").value, $resource.getMeasure("critical_violations").value, $resource.getMeasure("major_violations").value, $resource.getMeasure("minor_violations").value, $resource.getMeasure("info_violations").value, $resource.getMeasure("major_violations").value))
+                        <div style="width: 70px" class="barchart"><div style="width: $wid%;background-color:#777;"></div></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><img src="$sonar_config.url/images/priority/MINOR.png?1369729533" alt="Minor"></td>
+                    <td> &nbsp;<a target="_blank" href="$sonar_config.url/drilldown/violations/$sonar_config.resourceId?severity=MINOR">Minor</a></td>
+                    <td align="right" style="padding: 0 10px;">
+                        <span id="m_minor_violations">$resource.getMeasure("minor_violations").formattedValue</span></td>
+                    <td align="left" style="padding-bottom:2px; padding-top:2px;">
+                        #set($wid= $data.violationPercentage($resource.getMeasure("blocker_violations").value, $resource.getMeasure("critical_violations").value, $resource.getMeasure("major_violations").value, $resource.getMeasure("minor_violations").value, $resource.getMeasure("info_violations").value, $resource.getMeasure("minor_violations").value))
+                        <div style="width: 70px" class="barchart"><div style="width: $wid%;background-color:#777;"></div></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><img src="$sonar_config.url/images/priority/INFO.png?1369729533" alt="Info"></td>
+                    <td> &nbsp;<a target="_blank" href="$sonar_config.url/drilldown/violations/$sonar_config.resourceId?severity=INFO">Info</a></td>
+                    <td align="right" style="padding: 0 10px;">
+                        <span id="m_info_violations">$resource.getMeasure("info_violations").formattedValue</span></td>
+                    <td align="left" style="padding-bottom:2px; padding-top:2px;">
+                        #set($wid= $data.violationPercentage($resource.getMeasure("blocker_violations").value, $resource.getMeasure("critical_violations").value, $resource.getMeasure("major_violations").value, $resource.getMeasure("minor_violations").value, $resource.getMeasure("info_violations").value, $resource.getMeasure("info_violations").value))
+                        <div style="width: 70px" class="barchart"><div style="width: $wid%;background-color:#777;"></div></div>
+                    </td>
+                </tr>
+                </tbody></table>
+        </td>
+    </tr>
+    </tbody></table>
+</div>
+    </div>
+
+    <div id="block_46" class="block">
+
+        <div style="height:100%;" class="class org.sonar.plugins.technicaldebt.TechnicalDebtWidget">
+            <div class="widget">
+                <table>
+                    <tr><td valign="top" width="33%">
+                        <div class="dashbox">
+                            <table>
+                                <tbody><tr>
+                                    <td><h3>Technical Debt</h3></td>
+                                    <td style="padding-left:2px;"><a target="Wiki" href="http://docs.codehaus.org/x/sQCDBw"><img src="$sonar_config.url/images/help.png?1369729533" class="png" alt="Help"></a></td>
+                                </tr>
+                                </tbody></table>
+                            <p>
+        <span class="big">
+          <a target="_blank" title="" rel="" class="" href="$sonar_config.url/drilldown/measures/$sonar_config.resourceId?metric=technical_debt_ratio"><span id="m_technical_debt_ratio">$resource.getMeasure("technical_debt_ratio").formattedValue</span></a>
+        </span>
+                            </p>
+                            <p>
+        <span>
+          <a target="_blank" title="" rel="" class="" href="$sonar_config.url/drilldown/measures/$sonar_config.resourceId?metric=technical_debt">$ <span id="m_technical_debt">$resource.getMeasure("technical_debt").formattedValue</span></a>
+                  </span>
+                            </p>
+                            <p>
+        <span>
+          <a target="_blank" title="" rel="" class="" href="$sonar_config.url/drilldown/measures/$sonar_config.resourceId?metric=technical_debt_days"><span id="m_technical_debt_days">$resource.getMeasure("technical_debt_days").formattedValue</span> man days</a>
+                  </span>
+                            </p>
+                        </div>
+                    </td>
+
+                    <td>
+                    <div class="yui-u">
+                        <img width="248" height="65" title="" src="$sonar_config.url/gchart?chs=248x65&amp;chd=t:$data.technicalDebtRepartData&amp;cht=p&amp;chl=$data.technicalDebtRepartColumn" alt="">
+
+                    </div>
+                    </td>
+                        <td width="50%" valign="top" nowrap="">
+
+                            <div class="dashbox">
+                                <h3>Unit test success</h3>
+                                <p><span class="big">
+<a target="_blank" title="" rel="" class="" href="$sonar_config.url/drilldown/measures/$sonar_config.resourceId?metric=test_success_density"><span id="m_test_success_density">$resource.getMeasure("test_success_density").formattedValue</span></a></span>
+                                </p>
+                                <p>
+                                    <a target="_blank" title="" rel="" class="" href="$sonar_config.url/drilldown/measures/$sonar_config.resourceId?metric=test_failures"><span id="m_test_failures">$resource.getMeasure("test_failures").formattedValue</span> failures</a>
+                                </p>
+                                <p>
+                                    <a target="_blank" title="" rel="" class="" href="$sonar_config.url/drilldown/measures/$sonar_config.resourceId?metric=test_errors"><span id="m_test_errors">$resource.getMeasure("test_errors").formattedValue</span> errors</a>
+                                </p>
+                                <p>
+                                    <a target="_blank" title="" rel="" class="" href="$sonar_config.url/drilldown/measures/$sonar_config.resourceId?metric=tests"><span id="m_tests">$resource.getMeasure("tests").formattedValue</span> tests</a>
+                                </p>
+
+                                <p>
+                                    <a target="_blank" title="" rel="" class="" href="$sonar_config.url/drilldown/measures/$sonar_config.resourceId?metric=skipped_tests"><span id="m_skipped_tests">$resource.getMeasure("skipped_tests").formattedValue</span> skipped</a>
+                                </p>
+
+                                <p>
+                                    <a target="_blank" title="" rel="" class="" href="$sonar_config.url/drilldown/measures/$sonar_config.resourceId?metric=test_execution_time"><span id="m_test_execution_time">$resource.getMeasure("test_execution_time").formattedValue</span></a>
+                                </p>
+                            </div>
+
+                        </td>
+                    </tr>
+                    </table>
+                </div>
+                <div class="clear"></div>
+            </div>
+
+            <div style="clear: both;"></div>
+        </div>
+
+
+<div id="block_10" class="block">
+
+    <div style="height:100%;" class="code_coverage">
+
+        <div class="widget">
+
+            <table width="100%">
+                <tbody><tr>
+                    <td width="20%" valign="top" nowrap="">
+                        <div class="dashbox">
+                            <p class="title">Unit tests coverage</p>
+                            <p>
+                                <span class="big"><a target="_blank" title="" rel="" class="" href="$sonar_config.url/drilldown/measures/$sonar_config.resourceId?metric=coverage"><span id="m_coverage">$resource.getMeasure("coverage").formattedValue</span></a></span>
+                                </p>
+
+                            <p>
+                                <a target="_blank" title="" rel="" class="" href="$sonar_config.url/drilldown/measures/$sonar_config.resourceId?highlight=line_coverage&amp;metric=uncovered_lines"><span id="m_line_coverage">$resource.getMeasure("line_coverage").formattedValue</span> line coverage<a>
+                                </p>
+##                            <p>total $resource.getMeasureFormattedValue("lines_to_cover", "-") uncovered $resource.getMeasureFormattedValue("uncovered_lines", "-")</p>
+                            <p>
+                                <a target="_blank" title="" rel="" class="" href="$sonar_config.url/drilldown/measures/$sonar_config.resourceId?highlight=branch_coverage&amp;metric=uncovered_conditions"><span id="m_branch_coverage">$resource.getMeasure("branch_coverage").formattedValue</span> branch coverage</a>
+                                </p>
+##                            <p>total $resource.getMeasureFormattedValue("conditions_to_cover", "-") uncovered $resource.getMeasureFormattedValue("uncovered_conditions", "-")</p>
+                        </div>
+                    </td>
+
+                    <td>
+                        <div id="timeline-chart-52"></div>
+                        <script type="text/javascript">
+                            function d(y, m, d, h, min, s) {
+                                return new Date(y, m, d, h, min, s);
+                            }
+
+                            function transform(data) {
+                                for (var i = 0; i < data.length; i++) {
+                                    for (var j = 0 ; j < data[i].length; j++) {
+                                        data[i][j].x = new Date(data[i][j].x);
+                                    }
+                                }
+                                return data;
+                            }
+//                            var data = [[{x:d(2013,5,20,6,13,16),y:1573.00,yl:"1,573"},{x:d(2013,5,24,2,24,39),y:5559.00,yl:"5,559"},{x:d(2013,5,25,7,2,14),y:4836.00,yl:"4,836"},{x:d(2013,5,26,7,1,59),y:4832.00,yl:"4,832"},{x:d(2013,5,27,7,2,7),y:5559.00,yl:"5,559"},{x:d(2013,5,28,0,55,20),y:4832.00,yl:"4,832"},{x:d(2013,5,29,7,1,56),y:4832.00,yl:"4,832"},{x:d(2013,5,30,7,1,59),y:4832.00,yl:"4,832"},{x:d(2013,6,1,7,1,55),y:4832.00,yl:"4,832"},{x:d(2013,6,2,7,1,56),y:4832.00,yl:"4,832"},{x:d(2013,6,3,7,1,35),y:4832.00,yl:"4,832"},{x:d(2013,6,4,7,1,34),y:5103.00,yl:"5,103"},{x:d(2013,6,5,7,2,19),y:5177.00,yl:"5,177"},{x:d(2013,6,6,7,1,38),y:5177.00,yl:"5,177"},{x:d(2013,6,7,7,1,35),y:5177.00,yl:"5,177"},{x:d(2013,6,8,7,1,31),y:5177.00,yl:"5,177"},{x:d(2013,6,9,4,0,2),y:5569.00,yl:"5,569"},{x:d(2013,6,10,7,2,1),y:5569.00,yl:"5,569"},{x:d(2013,6,11,7,2,11),y:5569.00,yl:"5,569"},{x:d(2013,6,12,8,44,55),y:6399.00,yl:"6,399"},{x:d(2013,6,13,7,2,34),y:6399.00,yl:"6,399"},{x:d(2013,6,14,7,2,30),y:6399.00,yl:"6,399"},{x:d(2013,6,15,7,3,55),y:6399.00,yl:"6,399"},{x:d(2013,6,16,3,20,30),y:6455.00,yl:"6,455"},{x:d(2013,6,17,7,3,40),y:6484.00,yl:"6,484"},{x:d(2013,6,18,1,53,34),y:6484.00,yl:"6,484"},{x:d(2013,6,18,2,30,7),y:6484.00,yl:"6,484"},{x:d(2013,6,18,7,3,23),y:6484.00,yl:"6,484"},{x:d(2013,6,18,7,54,38),y:6484.00,yl:"6,484"},{x:d(2013,6,18,9,10,47),y:6484.00,yl:"6,484"}],[{x:d(2013,5,20,6,13,16),y:76.50,yl:"76.5%"},{x:d(2013,5,24,2,24,39),y:56.70,yl:"56.7%"},{x:d(2013,5,25,7,2,14),y:65.90,yl:"65.9%"},{x:d(2013,5,26,7,1,59),y:63.90,yl:"63.9%"},{x:d(2013,5,27,7,2,7),y:55.50,yl:"55.5%"},{x:d(2013,5,28,0,55,20),y:63.90,yl:"63.9%"},{x:d(2013,5,29,7,1,56),y:63.90,yl:"63.9%"},{x:d(2013,5,30,7,1,59),y:63.90,yl:"63.9%"},{x:d(2013,6,1,7,1,55),y:63.90,yl:"63.9%"},{x:d(2013,6,2,7,1,56),y:67.80,yl:"67.8%"},{x:d(2013,6,3,7,1,35),y:67.80,yl:"67.8%"},{x:d(2013,6,4,7,1,34),y:67.80,yl:"67.8%"},{x:d(2013,6,5,7,2,19),y:67.00,yl:"67.0%"},{x:d(2013,6,6,7,1,38),y:67.00,yl:"67.0%"},{x:d(2013,6,7,7,1,35),y:67.00,yl:"67.0%"},{x:d(2013,6,8,7,1,31),y:67.00,yl:"67.0%"},{x:d(2013,6,9,4,0,2),y:63.20,yl:"63.2%"},{x:d(2013,6,10,7,2,1),y:63.20,yl:"63.2%"},{x:d(2013,6,11,7,2,11),y:63.20,yl:"63.2%"},{x:d(2013,6,12,8,44,55),y:62.60,yl:"62.6%"},{x:d(2013,6,13,7,2,34),y:62.70,yl:"62.7%"},{x:d(2013,6,14,7,2,30),y:62.70,yl:"62.7%"},{x:d(2013,6,15,7,3,55),y:63.20,yl:"63.2%"},{x:d(2013,6,16,3,20,30),y:63.70,yl:"63.7%"},{x:d(2013,6,17,7,3,40),y:64.00,yl:"64.0%"},{x:d(2013,6,18,1,53,34),y:23.50,yl:"23.5%"},{x:d(2013,6,18,2,30,7),y:63.90,yl:"63.9%"},{x:d(2013,6,18,7,3,23),y:58.20,yl:"58.2%"},{x:d(2013,6,18,7,54,38),y:64.00,yl:"64.0%"},{x:d(2013,6,18,9,10,47),y:63.90,yl:"63.9%"}],[{x:d(2013,5,20,6,13,16),y:70.00,yl:"70"},{x:d(2013,5,24,2,24,39),y:208.00,yl:"208"},{x:d(2013,5,25,7,2,14),y:210.00,yl:"210"},{x:d(2013,5,26,7,1,59),y:210.00,yl:"210"},{x:d(2013,5,27,7,2,7),y:210.00,yl:"210"},{x:d(2013,5,28,0,55,20),y:210.00,yl:"210"},{x:d(2013,5,29,7,1,56),y:210.00,yl:"210"},{x:d(2013,5,30,7,1,59),y:210.00,yl:"210"},{x:d(2013,6,1,7,1,55),y:210.00,yl:"210"},{x:d(2013,6,2,7,1,56),y:228.00,yl:"228"},{x:d(2013,6,3,7,1,35),y:228.00,yl:"228"},{x:d(2013,6,4,7,1,34),y:239.00,yl:"239"},{x:d(2013,6,5,7,2,19),y:244.00,yl:"244"},{x:d(2013,6,6,7,1,38),y:244.00,yl:"244"},{x:d(2013,6,7,7,1,35),y:244.00,yl:"244"},{x:d(2013,6,8,7,1,31),y:244.00,yl:"244"},{x:d(2013,6,9,4,0,2),y:244.00,yl:"244"},{x:d(2013,6,10,7,2,1),y:244.00,yl:"244"},{x:d(2013,6,11,7,2,11),y:244.00,yl:"244"},{x:d(2013,6,12,8,44,55),y:267.00,yl:"267"},{x:d(2013,6,13,7,2,34),y:267.00,yl:"267"},{x:d(2013,6,14,7,2,30),y:267.00,yl:"267"},{x:d(2013,6,15,7,3,55),y:268.00,yl:"268"},{x:d(2013,6,16,3,20,30),y:269.00,yl:"269"},{x:d(2013,6,17,7,3,40),y:270.00,yl:"270"},{x:d(2013,6,18,1,53,34),y:270.00,yl:"270"},{x:d(2013,6,18,2,30,7),y:270.00,yl:"270"},{x:d(2013,6,18,7,3,23),y:270.00,yl:"270"},{x:d(2013,6,18,7,54,38),y:270.00,yl:"270"},{x:d(2013,6,18,9,10,47),y:270.00,yl:"270"}]];
+                            var data = $data.formattedTimeMachine;
+//                            var snapshots = [{sid:45571,d:"20 Jun 2013"},{sid:63089,d:"24 Jun 2013"},{sid:63816,d:"25 Jun 2013"},{sid:70395,d:"26 Jun 2013"},{sid:78481,d:"27 Jun 2013"},{sid:79637,d:"28 Jun 2013"},{sid:89111,d:"29 Jun 2013"},{sid:93715,d:"30 Jun 2013"},{sid:98130,d:"01 Jul 2013"},{sid:102890,d:"02 Jul 2013"},{sid:105279,d:"03 Jul 2013"},{sid:111556,d:"04 Jul 2013"},{sid:116310,d:"05 Jul 2013"},{sid:121065,d:"06 Jul 2013"},{sid:121205,d:"07 Jul 2013"},{sid:121345,d:"08 Jul 2013"},{sid:121485,d:"09 Jul 2013"},{sid:121926,d:"10 Jul 2013"},{sid:122073,d:"11 Jul 2013"},{sid:122645,d:"12 Jul 2013"},{sid:126970,d:"13 Jul 2013"},{sid:131690,d:"14 Jul 2013"},{sid:136410,d:"15 Jul 2013"},{sid:138798,d:"16 Jul 2013"},{sid:146424,d:"17 Jul 2013"},{sid:147707,d:"18 Jul 2013"},{sid:148676,d:"18 Jul 2013"},{sid:151876,d:"18 Jul 2013"},{sid:152329,d:"18 Jul 2013"},{sid:152902,d:"18 Jul 2013"}];
+                            var snapshots = $data.timeMachineSnapshots;
+                            data = transform(data);
+                            var metrics = ["Lines of code","Coverage","Unit tests"];
+//                            var events = [{sid:152902,d:d(2013,6,18,9,10,47),l:[{n:"10.1.0-Xpress"}]}];
+
+                            var timeline = new SonarWidgets.Timeline('timeline-chart-52')
+                                    .height(80)
+                                    .data(data)
+                                    .snapshots(snapshots)
+                                    .metrics(metrics);
+//                                    .events(events);
+                            timeline.render();
+                            /**
+                             autoResize(200, function() {
+timeline.render();
+});
+                             **/
+
+                        </script>
+                    </td>
+                </tr>
+                </tbody></table>
+
+            <div class="clear"></div>
+        </div>
+
+        <div style="clear: both;"></div>
+    </div>
+</div>
+</div>
+</td></tr>
+</table>
+#end
+</body>
+</html>

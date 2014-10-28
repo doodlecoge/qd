@@ -1,0 +1,130 @@
+#* @vtlvariable name="setting" type="com.webex.qd.widget.CdetsTrendWidget.Configuration" *#
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <link type="text/css" rel="stylesheet" href="${base}/css/jquery-ui-1.8.22.custom.css"/>
+    <link type="text/css" rel="stylesheet" href="${base}/css/common.css"/>
+    <link type="text/css" rel="stylesheet" href="${base}/css/sort_tbl.css"/>
+
+    <script type="text/javascript" src="${base}/script/jquery172.js"></script>
+    <script type="text/javascript" src="${base}/script/jquery-ui-1.8.22.custom.min.js"></script>
+
+    <script type="text/javascript" src="${base}/script/common.js"></script>
+    <link type="text/css" rel="stylesheet" href="${base}/css/setting_common.css"/>
+
+    <script type="text/javascript">
+
+        function getSettings() {
+            var config = {};
+
+            config.name = $.trim($("#name").val());
+            config.queries = [];
+
+            var rows = $("#products_tbl").find('tbody:first').find('tr');
+
+            $.each(rows, function (i, row) {
+                var name = $(row).find('input:text:first').val();
+                var query = $(row).find('input:text:last').val();
+
+                name = $.trim(name);
+                query = $.trim(query);
+
+                if (name == '' || query == '') return;
+
+                var query = {name: name, query: query};
+                config.queries.push(query);
+            });
+
+            return config;
+        }
+
+        $(function () {
+            $("form input:text").addClass("text")
+                    .addClass("ui-corner-all")
+                    .addClass("ui-widget-content");
+            var products_tbl = $("#products_tbl");
+            var addNewRow = function () {
+                var tbody = products_tbl.find('tbody:first');
+
+                var tr = $('<tr></tr>');
+                var td = $('<td><input style="width: 90%"/></td>');
+                tr.append(td);
+
+                td = $('<td><input style="width: 96%"/></td>');
+                tr.append(td);
+
+                td = $('<td><a href="javascript:void(0)" class="btn01 del">Delete</a></td>');
+                tr.append(td);
+
+                tbody.append(tr);
+
+                resizeIfrmSize("setting");
+            };
+            $("#add_product_btn").click(addNewRow);
+
+
+            products_tbl.click(function (e) {
+                var el = $(e.target);
+                if (!el.hasClass('del')) return;
+                el.parent().parent().remove();
+            });
+
+            resizeIfrmSize("setting");
+        });
+
+    </script>
+
+
+</head>
+
+<body>
+<form onsubmit="return false;">
+    <ul>
+        <li>
+            <span>Widget Name:</span><br/>
+            <input id="name" name="name" type="text" style="width: 90%" value='$name'/>
+        </li>
+
+
+        <li>
+            <table id="products_tbl" style="width:100%;">
+                <thead>
+                <tr>
+                    <th style="width: 20%;" class="req">Display Name</th>
+                    <th style="width: 70%" class="req">Advanced Query</th>
+                    <th></th>
+                </tr>
+                </thead>
+
+                <tbody>
+                    #foreach($query in $setting.getQueries())
+                    <tr>
+                        <td><input style="width: 90%" value="$query.name"/></td>
+                        <td><input style="width: 96%" value="$query.query"/></td>
+                        <td><a href="javascript:void(0)" class="btn01 del">Delete</a></td>
+                    </tr>
+                    #end
+                </tbody>
+
+                <tfoot>
+                <tr>
+                    <td colspan="3" style="text-align: right;">
+                        <a href="javascript:void(0)"
+                           id="add_product_btn"
+                           class="btn01">
+                            Add More Query
+                        </a>
+                    </td>
+                </tr>
+                </tfoot>
+            </table>
+        </li>
+    </ul>
+
+</form>
+<a target="_blank" href="$base/help/cdets/index.html" class="setting-help"></a>
+
+</body>
+</html>

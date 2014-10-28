@@ -1,0 +1,92 @@
+#* @vtlvariable name="data" type="com.webex.qd.widget.ProductTrendsWidget.Data" *#
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <link type="text/css" rel="stylesheet" href="${base}/css/common.css" />
+    <link type="text/css" rel="stylesheet" href="${base}/css/jquery.plugins.css" />
+    <link type="text/css" rel="stylesheet" href="${base}/css/font-awesome.css" />
+    <script src="${base}/script/jquery172.js" type="text/javascript"></script>
+    <script src="${base}/script/raphael.js" type="text/javascript"></script>
+    <script src="${base}/script/popup.js" type="text/javascript"></script>
+    <script src="${base}/script/trend.js" type="text/javascript"></script>
+
+    <script type="text/javascript" src="${base}/script/common.js"></script>
+
+    <style type="text/css">
+        .hide_tbl {
+            float: right;
+        }
+
+        .hide_tbl:hover {
+            color: #f00;
+        }
+    </style>
+
+    <script type="text/javascript">
+        function foo() {
+            var loc = window.location;
+            var id = loc.toString().match(/\/([0-9]+)$/)[1];
+
+
+            var w = null;
+
+            if(this != parent) {
+
+//            if($(window).parent().size() > 0) {
+                var div = $("#view" + id, parent.document).parent();
+
+                w = div.width();
+            } else {
+                w = $(window).width();
+            }
+
+
+            var h = Math.round(w / 2.8);
+
+            var sz = {"w": w - 10, "h": h};
+            var pd = {t: 30, r: 10, b: 15, l: 30};
+
+            $("#svg_container").html('');
+
+            drawTrendWidget("svg_container",sz,pd,stats);
+        }
+
+            #if($data)
+            var stats = {};
+                #foreach($stats in $data.getStats().entrySet())
+                stats["$stats.key"] = [];
+                    #foreach($stat in $stats.value)
+                    stats["$stats.key"].push({
+                        bn:"$stat.buildNumber",
+                        tt: $stat.totalCase,
+                        ff: $stat.failedCase,
+                        dt: "$stat.dateCreated"})
+                    #end
+                #end
+
+            $(function () {
+                foo();
+                resize();
+            });
+            #else
+            #end
+
+
+
+
+    </script>
+</head>
+<body style="padding: 0; margin: 0;">
+<div>
+    #if(!$data)
+        <div style="height: 100px; line-height: 100px; text-align: center;">
+            Please Edit Your Project View.
+        </div>
+    #else
+        <div id="svg_container" style="width: 100%;" align="center"></div>
+    #end
+</div>
+</body>
+</html>

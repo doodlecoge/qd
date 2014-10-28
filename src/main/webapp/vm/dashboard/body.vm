@@ -1,0 +1,22 @@
+#* @vtlvariable name="dashboard"     type="com.webex.qd.vo.Dashboard" *#
+#* @vtlvariable name="user"     type="com.webex.qd.vo.User" *#
+
+#set($columns=$dashboard.getLayoutObject().getColumns())
+
+#foreach($column in $columns)
+
+<div class="widget-place" id="widget-place-$column.getId()">
+    #foreach($widgetId in $column.getWidgetIds())
+        #if($user.isAdminOfDashboard($dashboard.id) or $user.id == $dashboard.uid or $admin)
+            #editableWidget($dashboard.getWidgetById($widgetId).name $widgetId)
+        #else
+            #uneditableWidget($dashboard.getWidgetById($widgetId).name $widgetId)
+        #end
+    #end
+</div>
+#end
+
+
+
+
+

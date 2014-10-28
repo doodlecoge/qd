@@ -1,0 +1,109 @@
+#* @vtlvariable name="index"     type="int" *#
+#* @vtlvariable name="widget"     type="com.webex.qd.widget.IWidget" *#
+#* @vtlvariable name="setting"     type="com.webex.qd.widget.TimsReportWidget.Configuration" *#
+<html>
+<head>
+    <link href="${base}/css/tims/style.css" type="text/css" rel="stylesheet">
+    <style>
+        table {
+            font-size: 11px;
+        }
+
+        body {
+            margin: 0;
+        }
+
+        .tab {
+            display: inline-block;
+            height: 22px;
+            padding-left: 5px;
+            padding-right: 5px;
+            vertical-align: top;
+            background-image: url("${base}/images/tims/1.gif");
+            background-repeat: repeat-x;
+        }
+
+        .tab_s {
+            display: inline-block;
+            height: 22px;
+            padding-left: 5px;
+            padding-right: 5px;
+            vertical-align: top;
+            background-image: url("${base}/images/tims/3.gif");
+            background-repeat: repeat-x;
+        }
+
+        .tab a {
+            display: inline-block;
+            padding: 5px 5px 0;
+            height: 15px;
+            font-family: Verdana, arial;
+            font-weight: bold;
+            color: black
+        }
+
+        .tab_s a {
+            display: inline-block;
+            padding: 5px 5px 0;
+            height: 15px;
+            font-family: Verdana, arial;
+            font-weight: bold;
+            color: black
+        }
+
+        .loader {
+            vertical-align: middle;
+            margin-left: 3px;
+        }
+    </style>
+    <script type="text/javascript" src="${base}/script/jquery172.js"></script>
+    <script type="text/javascript" src="${base}/script/common.js"></script>
+    <script type="text/javascript">
+        function resizeView(widgetId) {
+            var ifrm = $("#view" + widgetId, parent.document);
+            var h = $("#container").outerHeight(true);
+            if (document.body.scrollWidth > $(document.body).innerWidth()) {
+                ifrm.height(h + 20);
+            } else {
+                ifrm.height(h + 1);
+            }
+        }
+
+        $(function () {
+            $.get("${base}/widget/tab/$widget.id", {tabIndex : $index}, function (html) {
+                $("#loading").hide();
+                $("#content").html(html);
+                resizeView($widget.id);
+                $.each($(".tims_id"), function(index, td){
+                    var link = $($('a', td)[0]);
+                    var timsId = link.text();
+                    $.get("${base}/widget/tims/entity_name/" + timsId, function(lectureName){
+                        link.text(lectureName);
+                        link.attr("title", lectureName);
+                        $(td).find(".loader").remove();
+                    });
+                });
+            }, "html").fail(function () {
+                        $("#loading").hide();
+                    });
+            resizeView($widget.id);
+
+        });
+    </script>
+</head>
+<body>
+<div id="container">
+<table style="width: 100%"><tbody><tr style="background-image: url('${base}/images/tims/background.gif')">
+    <td style="text-align: center;">
+        #set($i=0)#if($index == 0)<img src="${base}/images/tims/left_s.gif">#else<img src="${base}/images/tims/left.gif">#end#foreach($project in $setting.configEntries)#if($i==$index)<span class="tab_s">#else<span class="tab">#end<a href="?tabIndex=$i">$project.displayName</a></span>#if($i<$setting.configEntries.size() - 1)<img src="${base}/images/tims/separator.gif">#end#set($i=$i+1)#end#if($index==($setting.configEntries.size() - 1))<img src="${base}/images/tims/right_s.gif">#else<img src="${base}/images/tims/right.gif">#end
+    </td>
+</tr></tbody></table>
+    <div id="loading" style="height: 60px; line-height: 60px; text-align: center;">
+        <img  style="padding-top: 10px" src="${base}/images/loading.gif" alt="" />
+    </div>
+<div id="content">
+
+</div>
+</div>
+</body>
+</html>

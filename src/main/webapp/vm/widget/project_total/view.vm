@@ -1,0 +1,649 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+
+<link type="text/css" rel="stylesheet" href="${base}/css/jquery-ui-1.8.22.custom.css"/>
+<link type="text/css" rel="stylesheet" href="${base}/css/common.css"/>
+<link type="text/css" rel="stylesheet" href="${base}/css/jquery.plugins.css"/>
+<script type="text/javascript" src="${base}/script/jquery172.js"></script>
+<script type="text/javascript" src="${base}/script/jquery-ui-1.8.22.custom.min.js"></script>
+<script type="text/javascript" src="${base}/script/common.js"></script>
+<script type="text/javascript" src="${base}/script/jquery.plugins.js"></script>
+
+<style type="text/css">
+
+
+    .grp a {
+        background: url("${base}/images/arrows-dark.png") no-repeat scroll right -109px transparent;
+        padding-right: 10px;
+        text-decoration: none;
+        display: block;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+        outline: none;
+        color: #000;
+        cursor: pointer;
+    }
+
+    .pkg td {
+        cursor: pointer;
+    }
+
+    .grp.exp a {
+        background: url("${base}/images/arrows-dark.png") no-repeat scroll right -1px transparent;
+    }
+
+    .hid {
+        display: none;
+    }
+
+    .child span {
+        padding: 0 0 0 15px;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+        outline: none;
+    }
+
+    #mask {
+        position: absolute;
+        display: none;
+        z-index: 100;
+        background: #000;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }
+
+    #date_picker {
+        position: absolute;
+        display: none;
+        z-index: 200;
+        background: #f0f0f0;
+    }
+
+    .ui-datepicker {
+        font-size: 62.5%;
+    }
+</style>
+
+<script type="text/javascript">
+buildCountTotal =0;
+buildCountNonGroup =0;
+$(function () {
+    loadData();
+});
+
+function loadData() {
+    var data = {widgetId: $widget.id};
+
+    var from = $('#st').val();
+
+    if(from.match(/^\d{2}\/\d{2}\/\d{4}$/))
+        data['from'] = from;
+
+    var to = $('#et').val();
+    if(to.match(/^\d{2}\/\d{2}\/\d{4}$/))
+        data['to'] = to;
+
+    var xhr = $.ajax({
+        url: '${base}/widget/project_total/data',
+        data: data,
+        dataType: 'json'
+    });
+
+    xhr.done(function (data) {
+        showData(data);
+        resizeIfrmSize("view");
+    });
+
+    xhr.fail(function (data) {
+        $("#cont").html('load failed.');
+    });
+}
+
+var headers = [
+    {name: "Project", tip: "Project Code", klass: "txt", width: 150},
+    {name: "Total Cases", tip: "Total Cases", klass: "num"},
+    {name: "Total failed Cases", tip: "Total failed Cases", klass: "num"},
+    {name: "Total Pass Rate", tip: "Pass Rate", klass: "num"},
+    {name: "Total Build Count", tip: "Build Count", klass: "num"},
+    {name: "Build Average Cases", tip: "Average Cases", klass: "num"},
+    {name: "Daily Average Cases", tip: "Daily Average Cases", klass: "num"},
+    {name: "Create Time", tip: "Project Create Time", klass: "date"},
+    {name: "Last Modify Time", tip: "Last Modify Time", klass: "date"},
+//    {name: "Pass Rate(total)", tip: "Pass Rate(total)", klass: "num"},
+    {name: "Cases", tip: "Current Build Total Cases", klass: "num"},
+    {name: "Fail Cases", tip: "Fail Cases", klass: "num"},
+    {name: "Pass Rate", tip: "Pass Rate", klass: "num"}
+//    {name: "Coverage", tip: "Code Coverage", klass: "num"}
+];
+
+function showData(json) {
+    var exist = $('table.tbl').length > 0;
+
+    createTable(json);
+
+    var tbl = $('table.tbl');
+
+    addPassrateBar(tbl);
+
+
+    if(!exist) {
+        addExpandEvent(tbl);
+
+        addSortFeature(tbl);
+    }
+//
+//    addDatePickerEvent(tbl);
+}
+
+function addSortFeature(tbl) {
+    tbl.SorTable('init');
+
+    tbl.SorTable('option', 'sorting-rows', function() {
+        return tbl.find('tbody').find('tr:not(.child)');
+    });
+
+    tbl.SorTable('option', 'on-sorting', function(dir, th) {
+        th.siblings().removeClass('asc');
+        th.siblings().removeClass('desc');
+    });
+
+    tbl.SorTable('option', 'on-sorted', function() {
+        tbl.find('tr[pid]').addClass('hid');
+        tbl.find("tr.pkg").find('td:first').removeClass('exp');
+        tbl.find("tr.pkg").each(function(i, tr) {
+            var pkg = $(tr).attr('pkg');
+            tbl.find('tr[pid="' + pkg + '"]').insertAfter($(tr));
+        });
+    });
+
+    tbl.SorTable('setComparator', function(colA, colB) {
+        var reg = /<[^>]*>/g;
+        var a = $.trim($(colA).html().replace(reg, ''));
+        var b = $.trim($(colB).html().replace(reg, ''));
+        return a > b ? 1 : -1;
+    }, 0);
+
+    tbl.SorTable('setComparator', function(colA, colB) {
+        var reg = /([0-9]+[.]?[0-9]*)%/g;
+
+        var a = $.trim($(colA).html());
+        var b = $.trim($(colB).html());
+
+        var m = a.match(reg);
+        if(m) a = parseFloat(m[1]);
+        m = b.match(reg);
+        if(m) b = parseFloat(m[1]);
+
+        return a > b ? 1 : -1;
+    }, 5);
+
+    tbl.SorTable('setComparator', function(colA, colB) {
+        var reg = /([0-9]+[.]?[0-9]*)%/g;
+        var reg2 = /<[^>]*>/g;
+
+        var a = $.trim($(colA).html());
+        var b = $.trim($(colB).html());
+
+        var m = a.match(reg);
+        if(m) a = parseFloat(m[1]);
+        else a = a.replace(reg2, '');
+        m = b.match(reg);
+        if(m) b = parseFloat(m[1]);
+        else b = b.replace(reg2, '');
+
+        return a > b ? 1 : -1;
+    }, 6);
+
+    tbl.SorTable('sort', 0);
+}
+
+##function addDatePickerEvent(tbl) {
+##    tbl.find('td:last').unbind().bind('click', function() {
+##//        resizeIfrmSize("view", 60);
+##        resize(60);
+##        showMask();
+##        showDatePicker();
+##    });
+##}
+##
+function addPassrateBar(tbl) {
+    tbl.find('tbody').find('tr').each(function (i, tr) {
+        tr = $(tr);
+
+        var rate, bar, reg = /^-?\d*.\d*%$/;
+
+        var cell3 = tr.children('td:eq(3)');
+        rate = getPassrate(cell3);
+        if (rate.match(reg)) {
+            bar = createPassrateBar(rate);
+            cell3.append(bar);
+        }
+
+        var cell11 = tr.children('td:eq(11)');
+        rate = getPassrate(cell11);
+        if (rate.match(reg)) {
+            bar = createPassrateBar(rate);
+            cell11.append(bar);
+        }
+
+//        var cell8 = tr.children('td:eq(8)');
+//        rate = getPassrate(cell8);
+//        if (rate.match(reg)) {
+//            bar = createPassrateBar(rate);
+//            cell8.append(bar);
+//        }
+    });
+}
+
+function getPassrate(td) {
+    var html = $(td).html();
+    html = html.replace(/<\/?[^>]*>/g, '');
+    var rate = $.trim(html);
+    return rate;
+}
+
+function createPassrateBar(rate) {
+    var divOuter = $('<div class="pass_bar_total"></div>');
+    var divInner = $('<div class="pass_bar_pass" style="width: ' + rate + '"></div>');
+    divOuter.append(divInner);
+    return divOuter;
+}
+
+function addExpandEvent(tbl) {
+    tbl.click(function (e) {
+        var row = $(e.target).closest('tr');
+        var cell = row.find(':first-child');
+        var pkg = row.attr('pkg');
+        if (!pkg) {
+            return;
+        }
+        e.preventDefault();
+        if (cell.hasClass('exp')) {
+            cell.removeClass('exp');
+            tbl.find('tr[pid]').each(function (i, tr) {
+                if ($(tr).attr('pid') == pkg) $(tr).addClass('hid');
+            });
+        }
+        else {
+            cell.addClass('exp');
+            tbl.find('tr[pid]').each(function (i, tr) {
+                if ($(tr).attr('pid') == pkg) $(tr).removeClass('hid');
+            });
+        }
+        resizeIfrmSize("view");
+    });
+}
+
+function createTable(data) {
+    var tbl = $('table.tbl');
+
+    if(tbl.length == 0) {
+        tbl = $('<table class="tbl"></table>');
+        $('#cont').append(tbl);
+        tbl.append(createTableColumnGroups());
+        tbl.append(createTableHeader());
+    } else {
+        tbl.find('tbody').remove();
+        tbl.find('tfoot').remove();
+    }
+
+    $.each(data.passrates, function() {
+        tbl.append(createTableBody(data));
+        tbl.append(createTableFoot(data));
+        return false;
+    })
+}
+
+function createTableColumnGroups() {
+    var colgroup = $('<colgroup></colgroup>');
+    var col;
+
+    $.each(headers, function (i, val) {
+        if (!!val.width) col = $('<col style="width: ' + val.width + 'px" />');
+        else col = $('<col />');
+        colgroup.append(col);
+    });
+
+    return colgroup;
+}
+
+function createTableHeader() {
+    var thead = $('<thead></thead>');
+    var tr = $('<tr></tr>'), th, a;
+
+    $.each(headers, function (i, val) {
+        a = $('<a href="javascript:void(0)">' + val.name + '</a>');
+        th = $('<th class="' + val.klass + '" title="' + val.tip + '"></th>');
+        th.append(a);
+        tr.append(th);
+    });
+
+    thead.append(tr);
+    return thead;
+}
+
+function createTableBody(data) {
+    var tbody = $('<tbody></tbody>');
+    var tr, td;
+
+    $.each(data['config'], function (pkg, pcArr) {
+        if (pkg == '--') createTableRowsByPackage(data, pkg, tbody);
+        else {
+            createTableGroupRow(data, pkg, tbody);
+            createTableRowsByPackage(data, pkg, tbody);
+        }
+    });
+
+    return tbody;
+}
+
+function createTableFoot(data) {
+    var tfoot = $('<tfoot></tfoot>');
+    var tr = $('<tr></tr>');
+
+    var staTotal = 0;
+    var staFail = 0;
+    var staTotal2 = 0;
+    var staFail2 = 0;
+    var staBuildTotal =0;
+    var covTotal = 0;
+    var covFail = 0;
+    var time = '';
+    var creatTime ='9999-12-31';
+
+    var hasStat1 = false;
+    var hasCov = false;
+
+    $.each(data['passrates'], function (pc, stats) {
+        var stat0 = stats[0];
+        var stat1 = stats[1];
+
+        staTotal += stat0.total;
+        staFail += stat0.fail;
+
+        if (!!stat1) {
+            hasStat1 = true;
+            staTotal2 += stat1.total;
+            staFail2 += stat1.fail;
+            staBuildTotal+=Number(stat1.build_number)
+        }
+        if (stat0.last_modify_time > time) {
+            time = stat0.last_modify_time;
+        }
+        if(stat1.last_modify_time < creatTime){
+            creatTime =stat1.last_modify_time;
+        }
+    });
+
+
+    $.each(data['coverages'], function (pc, stats) {
+        var cov = stats[0];
+
+        if (!!cov) {
+            hasCov = true;
+            covTotal += cov.total;
+            covFail += cov.fail;
+        }
+    });
+    tr.append('<td class="' + headers[0].klass + '" title="Total">Total</td>');
+    if (hasStat1) tr.append('<td class="' + headers[1].klass + '">' + staTotal2 + '</td>');
+    else tr.append('<td class="' + headers[1].klass + '">-</td>');
+    if (hasStat1) tr.append('<td class="' + headers[2].klass + '">' + staFail2 + '</td>');
+    else tr.append('<td class="' + headers[2].klass + '">-</td>');
+    tr.append('<td class="' + headers[3].klass + '">' + passrate(staTotal2, staFail2) + '%</td>');
+    var bulidNumCount=Number(buildCountTotal)+Number(buildCountNonGroup)
+    tr.append('<td class="' + headers[4].klass + '">' + bulidNumCount + '</td>');
+    tr.append('<td class="' + headers[5].klass + '">' + Math.round(staTotal2/bulidNumCount) + '</td>');
+    var days =getDays(creatTime,time)+1;
+    tr.append('<td class="' + headers[6].klass + '" title="' + Math.round(staTotal2/days) +"("+days+")"+ '">' + Math.round(staTotal2/days) + '</td>');
+    tr.append('<td class="' + headers[7].klass + '" title="' + creatTime + '">' + smartTime(creatTime) + '</td>');
+    tr.append('<td class="' + headers[8].klass + '" title="' + time + '">' + smartTime(time) + '</td>');
+
+//    tr.append('<td class="' + headers[5].klass + '">-</td>');
+//    tr.append('<td class="' + headers[6].klass + '">-</td>');
+//    tr.append('<td class="' + headers[7].klass + '">-</td>');
+    tr.append('<td class="' + headers[9].klass + '">' + staTotal + '</td>');
+    tr.append('<td class="' + headers[10].klass + '">' + staFail + '</td>');
+    tr.append('<td class="' + headers[11].klass + '">' + passrate(staTotal, staFail) + '%</td>');
+//    if (hasCov) tr.append('<td class="' + headers[11].klass + '">' + passrate(covTotal, covFail) + '%</td>');
+//    else tr.append('<td class="' + headers[11].klass + '">-</td>');
+
+    tfoot.append(tr);
+    return tfoot;
+}
+
+function createTableGroupRow(data, pkg, tbody) {
+
+    var staTotal = 0;
+    var staFail = 0;
+    var staTotal2 = 0;
+    var staFail2 = 0;
+    var covTotal = 0;
+    var covFail = 0;
+    var time = '';
+    var creatTime ='9999-12-31';
+    var buildCount =0;
+
+    var hasStat1 = false;
+    var hasCov = false;
+
+    var hasChild = false;
+
+    $.each(data['config'][pkg], function (i, pc) {
+        if(!data['passrates'][pc]) return;
+
+        hasChild = true;
+
+        var stat0 = data['passrates'][pc][0];
+        var stat1 = data['passrates'][pc][1];
+        var cov = data['coverages'][pc];
+
+        staTotal += stat0.total;
+        staFail += stat0.fail;
+        if(stat1==null){
+            stat1 =stat0;
+        }
+        if(Number(stat1.build_number)>buildCount){
+            buildCount = Number(stat1.build_number);
+        }
+        if (!!stat1) {
+            hasStat1 = true;
+            staTotal2 += stat1.total;
+            staFail2 += stat1.fail;
+        }
+
+        if (!!cov) {
+            hasCov = true;
+            covTotal += cov[0].total;
+            covFail += cov[0].fail;
+        }
+
+        if (stat0.last_modify_time > time) {
+            time = stat0.last_modify_time;
+        }
+        if(stat1.last_modify_time < creatTime){
+            creatTime =stat1.last_modify_time;
+        }
+    });
+
+    // don't show group has no child that has data
+    if(!hasChild) return;
+
+    var tr = $('<tr class="pkg" pkg="' + pkg + '"></tr>');
+
+    tr.append('<td class="grp ' + headers[0].klass + '" title="' + pkg + '"><a>' + pkg + '</a></td>');
+
+    if (hasStat1) tr.append('<td class="' + headers[1].klass + '">' + staTotal2 + '</td>');
+    else tr.append('<td class="' + headers[1].klass + '">-</td>');
+    if (hasStat1) tr.append('<td class="' + headers[2].klass + '">' + staFail2 + '</td>');
+    else tr.append('<td class="' + headers[2].klass + '">-</td>');
+    tr.append('<td class="' + headers[3].klass + '">' + passrate(staTotal2, staFail2) + '%</td>');
+    tr.append('<td class="' + headers[4].klass + '" title="' + buildCount + '">' + buildCount + '</td>');
+    tr.append('<td class="' + headers[5].klass + ' title="' + Math.round(staTotal2/buildCount) + '">' + Math.round(staTotal2/buildCount) + '</td>');
+    var days =getDays(creatTime,time)+1;
+    tr.append('<td class="' + headers[6].klass + '" title="' + Math.round(staTotal2/days) +"("+days+")"+ '">' + Math.round(staTotal2/days) + '</td>');
+
+    tr.append('<td class="' + headers[7].klass + '" title="' + creatTime + '">' + smartTime(creatTime) + '</td>');
+    tr.append('<td class="' + headers[8].klass + '" title="' + time + '">' + smartTime(time) + '</td>');
+        tr.append('<td class="' + headers[9].klass + '">' + staTotal + '</td>');
+    tr.append('<td class="' + headers[10].klass + '">' + staFail + '</td>');
+    tr.append('<td class="' + headers[11].klass + '">' + passrate(staTotal, staFail) + '%</td>');
+//    if (hasCov) tr.append('<td class="' + headers[11].klass + '">' + passrate(covTotal, covFail) + '%</td>');
+//    else tr.append('<td class="' + headers[11].klass + '">-</td>');
+
+    tbody.append(tr);
+
+    buildCountTotal+=buildCount;
+}
+
+function getDays(start,end){
+    var type1 = typeof start,type2 = typeof end;
+    if(type1 == 'string')
+        start = stringToTime(start);
+    else if(start.getTime)
+        start = start.getTime();
+    if(type2 == 'string')
+        end = stringToTime(end);
+    else if(end.getTime)
+        end = end.getTime();
+    return Math.round((end - start) /1000/(60*60*24));
+}
+
+function stringToTime(string){
+    var f = string.split(' ', 2);
+    var d = (f[0] ? f[0] : '').split('-', 3);
+    var t = (f[1] ? f[1] : '').split(':', 3);
+    return (new Date(
+            parseInt(d[0], 10) || null,
+            (parseInt(d[1], 10) || 1)-1,
+            parseInt(d[2], 10) || null,
+            parseInt(t[0], 10) || null,
+            parseInt(t[1], 10) || null,
+            parseInt(t[2], 10) || null
+    )).getTime();
+
+}
+function smartTime(time) {
+    var reg = /^20\d\d-(\d\d-\d\d)\s*\d\d:\d\d(:\d\d)?$/;
+    var m = time.match(reg);
+    if(!!m) {
+        return m[1];
+    } else {
+        return time;
+    }
+}
+
+function getPassrateUrl(pc, bn) {
+    return "$rptBaseUrl/tasche/reports/viewGenericReport.action?projectCode="
+            + pc + "&buildNumber=" + encodeURI(bn).replace("#","%23");
+}
+
+
+function createTableRowsByPackage(data, pkg, tbody) {
+    var tr, url, a, td;
+    $.each(data['config'][pkg], function (i, pc) {
+        if(!data['passrates'][pc]) return;
+
+        if (pkg == '--') {
+            tr = $('<tr></tr>');
+        }else{
+            tr = $('<tr class="child hid" pid="' + pkg + '" class="child"></tr>');
+        }
+
+
+        tr.append('<td class="' + headers[0].klass + '" title="' + pc + '"><span style="color: #000">' + pc + '</span></td>');
+
+        var stat0 = data['passrates'][pc][0];
+        var stat1 = data['passrates'][pc][1];
+        if(stat1==null){
+            stat1 = stat0;
+        }
+
+        if (!!stat1) tr.append('<td class="' + headers[1].klass + '">' + stat1.total + '</td>');
+        else tr.append('<td class="' + headers[1].klass + '">-</td>');
+        if (!!stat1) tr.append('<td class="' + headers[2].klass + '">' + stat1.fail + '</td>');
+        else tr.append('<td class="' + headers[2].klass + '">-</td>');
+
+
+        span = $('<span></span>').html(passrate(stat1.total, stat1.fail) + '%');
+
+        td = $('<td></td>').addClass(headers[3].klass).append(span);
+        tr.append(td);
+
+        tr.append('<td class="' + headers[4].klass + '" title="' + stat1.build_number + '">' + stat1.build_number + '</td>');
+        tr.append('<td class="' + headers[5].klass + '" title="' + Math.round(stat1.total/stat1.build_number) + '">' + Math.round(stat1.total/stat1.build_number) + '</td>');
+        var days = getDays(stat1.last_modify_time,stat0.last_modify_time) + 1;
+        tr.append('<td class="' + headers[6].klass + '" title="' + Math.round(stat1.total/days)+"("+days+")" + '">' + Math.round(stat1.total/days) + '</td>');
+        tr.append('<td class="' + headers[7].klass + '" title="' + stat1.last_modify_time + '">' + smartTime(stat1.last_modify_time) + '</td>');
+        tr.append('<td class="' + headers[8].klass + '" title="' + stat0.last_modify_time + '">' + smartTime(stat0.last_modify_time) + '</td>');
+
+        tr.append('<td class="' + headers[9].klass + '">' + stat0.total + '</td>');
+        tr.append('<td class="' + headers[10].klass + '">' + stat0.fail + '</td>');
+
+        url = getPassrateUrl(pc, stat0.build_number);
+        a = $('<a target="_blank"></a>').attr('href', url)
+                .html(passrate(stat0.total, stat0.fail) + '%')
+                .attr('title', stat0.build_number);
+
+        td = $('<td></td>').addClass(headers[11].klass).append(a);
+        tr.append(td);
+
+//        var cov = data['coverages'][pc];
+//        if (!!cov) {
+//            a = $('<a target="_blank"></a>').attr('href', cov[0].url).html(passrate(cov[0].total, cov[0].fail) + '%');
+//            td = $('<td></td>').addClass(headers[11].klass).append(a);
+//            tr.append(td);
+////                    tr.append('<td class="' + headers[5].klass + '">' + passrate(cov[0].total, cov[0].fail) + '%</td>');
+//        }
+//        else tr.append('<td class="' + headers[11].klass + '">-</td>');
+
+
+        tbody.append(tr);
+        if(pkg == '--'){
+            buildCountNonGroup +=stat1.build_number;
+        }
+    });
+}
+
+function passrate(total, fail) {
+    total = parseInt(total);
+    fail = parseInt(fail);
+
+    if (total == 0) return 0;
+
+    return Math.round((total - fail) / total * 1000) / 10;
+}
+
+function diff(total, fail, total2, fail2) {
+    var pass0 = passrate(total, fail);
+    var pass1 = passrate(total2, fail2);
+
+    return Math.round((pass0 - pass1) * 10) / 10;
+}
+
+</script>
+</head>
+<body style="padding: 0; margin: 0;">
+<div id="cont"></div>
+<div id="mask" class="t30"></div>
+<div id="date_picker">
+    <table width="100%">
+
+        <tr>
+            <td><input type="text" id="st" value="select start date" /></td>
+            <td><input type="text" id="et" value="select end date"/></td>
+            <td><a id="dp_ok" href="javascript:void(0)" class="btn01 def" style="font-size: 12px;">OK</a></td>
+        </tr>
+
+    </table>
+</div>
+</body>
+</html>

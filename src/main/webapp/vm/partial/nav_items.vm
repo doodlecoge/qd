@@ -1,0 +1,206 @@
+#* @vtlvariable name="dashboard"     type="com.webex.qd.vo.Dashboard" *#
+#* @vtlvariable name="allDashboards"     type="java.util.List<com.webex.qd.vo.Dashboard>" *#
+#* @vtlvariable name="myOwnedDashboards"     type="java.util.List<com.webex.qd.vo.Dashboard>" *#
+#* @vtlvariable name="myAdministrations"     type="java.util.List<com.webex.qd.vo.Dashboard>" *#
+#* @vtlvariable name="myFavorites"     type="java.util.List<com.webex.qd.vo.Dashboard>" *#
+#* @vtlvariable name="user"     type="com.webex.qd.vo.User" *#
+
+
+#if($principal)
+
+<ul class="nav2" style="float:right;margin-right:20px;">
+    <li class="dropdown navItem nonSelNavItem">
+        #set($sum = $myAdministrations.size() + $myFavorites.size() + $myOwnedDashboards.size())
+        <a data-toggle="dropdown" class="dropdown-toggle" href="#"><span>My Dashboards <span class="num">$sum</span><b class="caret"></b></span></a>
+        <ul class="dropdown-menu">
+            #if($myOwnedDashboards.size() > 0)
+                <li class="nav-header">Owned Dashboards</li>
+                #foreach($d in $myOwnedDashboards)
+                    #if ($d.isGroup())
+                        <li class="dropdown-submenu">
+##                            <div class="buttonWrapper"><a href="" class="sideButton" style="background-image: url(${base}/images/Dashboard.png);"></a></div>
+                            <a href="${base}/dashboard/$d.id">$d.name</a>
+                            <ul class="dropdown-menu">
+                                #foreach($sub in $d.getGroupDashboardEntries())
+                                    <li><a href="${base}/dashboard/$sub.id.dashboardId">$sub.getDashboard().name</a></li>
+                                #end
+                            </ul>
+                        </li>
+                    #else
+                        <li><a href="${base}/dashboard/$d.id">$d.name</a></li>
+                    #end
+                #end
+            #end
+
+            <li>
+                <a class="create_dashboard" href="javascript:void(0)" style="text-align: center; font-size: 16px; font-weight: bold;" title="Create a new dashboard">+</a>
+            </li>
+
+            #if($myOwnedDashboards.size() > 0 && $myAdministrations.size() > 0)
+                <li class="divider"></li>
+            #end
+
+            #if($myAdministrations.size() > 0)
+                <li class="nav-header">Administrations</li>
+                #foreach($d in $myAdministrations)
+                    #if ($d.isGroup())
+                        <li class="dropdown-submenu">
+##                            <div class="buttonWrapper"><a href="" class="sideButton" style="background-image: url(${base}/images/trash.gif);"></a></div>
+                            <a href="${base}/dashboard/$d.id">$d.name</a>
+                            <ul class="dropdown-menu">
+                                #foreach($sub in $d.getGroupDashboardEntries())
+                                    <li><a href="${base}/dashboard/$sub.id.dashboardId">$sub.getDashboard().name</a></li>
+                                #end
+                            </ul>
+                        </li>
+                    #else
+                        <li><a href="${base}/dashboard/$d.id">$d.name</a></li>
+                    #end
+                #end
+            #end
+
+            #if(($myAdministrations.size() > 0 || $myOwnedDashboards.size() > 0 ) && $myFavorites.size() > 0)
+                <li class="divider"></li>
+            #end
+
+            #if($myFavorites.size() > 0)
+                <li class="nav-header">Favorites</li>
+                #foreach($d in $myFavorites)
+                    #if ($d.isGroup())
+                        <li class="dropdown-submenu">
+##                            <div class="buttonWrapper"><a href="" class="sideButton" style="background-image: url(${base}/images/trash.gif);"></a></div>
+                            <a href="${base}/dashboard/$d.id">$d.name</a>
+                            <ul class="dropdown-menu">
+                                #foreach($sub in $d.getGroupDashboardEntries())
+                                    <li><a href="${base}/dashboard/$sub.id.dashboardId">$sub.getDashboard().name</a></li>
+                                #end
+                            </ul>
+                        </li>
+                    #else
+                        <li><a href="${base}/dashboard/$d.id">$d.name</a></li>
+                    #end
+                #end
+            #end
+        </ul>
+    </li>
+</ul>
+#end
+
+<ol class="nav">
+<li style="width: 30px; height: 30px; padding: 0;">
+</li>
+
+#set($cur_id = $dashboard.id)
+#set($alreadyShown = 0)
+
+#foreach($db in $allDashboards)
+
+    #if($cur_id == $db.id)
+        #set($alreadyShown = 1)
+    #end
+
+    #if($db.isGroup())
+        #if($db.contains($dashboard.id))
+            #set($alreadyShown = 1)
+        <li class="grp" dbid="$dashboard.id" grp="$db.id">
+            <a href="${base}/dashboard/$db.id" dbid="$dashboard.id">
+                $db.name
+                <span style="color: #222; font-size: 0.8em">( $dashboard.name )</span>
+            </a>
+            <a class="downarrow" dbid="$db.id"></a>
+        </li>
+        #else
+        <li class="grp" dbid="$db.id" grp="$db.id">
+
+            <a href="${base}/dashboard/$db.id" dbid="$db.id">
+                $db.name
+            </a>
+            <a class="downarrow" dbid="$db.id"></a>
+        </li>
+        #end
+    #else
+    <li dbid="$db.id">
+        <a href="${base}/dashboard/$db.id" dbid="$db.id">
+            $db.name
+        </a>
+    </li>
+    #end
+#end
+
+
+#if($dashboard && ($alreadyShown == 0))
+<li>
+    <a href="javascript:void(0)" dbid="$dashboard.id">
+        $dashboard.name
+    </a>
+</li>
+#end
+
+    #if($principal)
+        <li style="padding: 0 5px">
+            <a id="add_new_dashboard" title="add dashboard" style="padding: 0"
+               class="add_dashboard inline-block" href="javascript:void(0)"></a>
+        </li>
+    #end
+
+</ol>
+
+
+<script language="javascript" type="text/javascript">
+    ##########################################################
+    ## highlight current navigation item
+    try {
+        dbid = parseInt(dbid);
+        var lis = $("ul.nav").find("a[dbid=" + dbid + "]");
+        $(lis.get(0)).parent().addClass("sel");
+    } catch (e) {
+    }
+
+
+    ## defined in nav.vm
+    if (typeof add_sub_menu != "undefined") {
+        add_sub_menu();
+    }
+
+
+
+    $(".create_dashboard").click(
+        function() {
+            showDialog("Create New Dashboard");
+            var cont = $("#dialog_cc").find(".content");
+            cont.html('');
+            $.get('${base}/dashboard/add_db_panel', function(data) {
+                cont.html(data);
+            });
+        });
+
+    function toggle( e ) {
+        var $this = $(this)
+                , selector = $this.attr('data-target')
+                , $parent
+                , isActive
+
+        if (!selector) {
+            selector = $this.attr('href')
+                    selector = selector && selector.replace(/.*(?=#[^\s]*$)/, '') //strip for ie7
+        }
+
+        $parent = $(selector)
+            $parent.length || ($parent = $this.parent())
+
+        isActive = $parent.hasClass('open')
+
+        $.fn.clearMenus()
+
+        if (!isActive) {
+            $parent.toggleClass('open');
+            $parent.toggleClass('selNavItem');
+            $parent.removeClass('nonSelNavItem');
+        }
+
+        return false
+    }
+
+    $('html').on('click.dropdown.data-api', $.fn.clearMenus);
+    $('body').on('click.dropdown.data-api', '[data-toggle="dropdown"]', toggle);
+</script>

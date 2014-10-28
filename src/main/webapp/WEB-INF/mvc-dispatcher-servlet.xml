@@ -1,0 +1,107 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-3.0.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx-3.1.xsd">
+
+
+    <bean id="placeholderConfig" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath*:qd.properties</value>
+            </list>
+        </property>
+    </bean>
+
+    <mvc:annotation-driven/>
+    <tx:annotation-driven transaction-manager="trans"/>
+    <context:component-scan base-package="com.webex.qd"/>
+
+
+    <mvc:interceptors>
+        <bean class="com.webex.qd.spring.interceptor.AuthenticationInfoInterceptor"></bean>
+    </mvc:interceptors>
+
+    <mvc:resources mapping="/css/**" location="/css/"/>
+    <mvc:resources mapping="/images/**" location="/images/"/>
+    <mvc:resources mapping="/script/**" location="/script/"/>
+    <mvc:resources mapping="/font/**" location="/font/"/>
+    <mvc:resources mapping="/help/**" location="/help/"/>
+
+    <bean class="com.webex.qd.spring.QdExceptionHandler"></bean>
+
+    <bean id="velocityConfig" class="org.springframework.web.servlet.view.velocity.VelocityConfigurer">
+        <property name="resourceLoaderPath" value="/vm"/>
+        <property name="configLocation" value="/WEB-INF/velocity.properties"/>
+    </bean>
+
+    <bean class="org.springframework.web.servlet.view.velocity.VelocityViewResolver">
+        <property name="suffix" value=".vm"/>
+        <property name="exposeSpringMacroHelpers" value="true"/>
+        <property name="exposeRequestAttributes" value="true"/>
+        <property name="exposeSessionAttributes" value="true"/>
+        <property name="allowSessionOverride" value="true"/>
+        <property name="contentType" value="text/html;charset=UTF-8"/>
+        <property name="dateToolAttribute" value="dateTool"/>
+        <property name="toolboxConfigLocation" value="/WEB-INF/toolbox.xml"/>
+        <property name="redirectHttp10Compatible" value="false"/>
+    </bean>
+
+    <bean id="jsonHttpMessageConverter"
+          class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter"/>
+
+
+    <bean name="ds_qd" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="driverClass" value="com.mysql.jdbc.Driver"/>
+        <property name="jdbcUrl" value="jdbc:mysql://${mysql.qd.ip}:${mysql.qd.port}/qd"/>
+        <property name="user" value="hch"/>
+        <property name="password" value="pass321"/>
+
+
+        <property name="maxPoolSize" value="50"/>
+        <property name="initialPoolSize" value="2"/>
+        <property name="minPoolSize" value="1"/>
+        <property name="maxStatements" value="200"/>
+        <property name="maxIdleTime" value="300"/>
+        <property name="acquireIncrement" value="10"/>
+        <property name="unreturnedConnectionTimeout" value="90"/>
+        <property name="maxConnectionAge" value="120"/>
+    </bean>
+
+    <bean name="sf_qd" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+        <property name="dataSource" ref="ds_qd"/>
+        <property name="packagesToScan" value="com.webex.qd"/>
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</prop>
+                <prop key="hibernate.show_sql">false</prop>
+            </props>
+        </property>
+    </bean>
+
+    <bean id="trans" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sf_qd"/>
+    </bean>
+    <bean id="contextSource" class="org.springframework.ldap.core.support.LdapContextSource">
+        <property name="url" value="ldap://ldap.cisex.com:389"/>
+        <property name="base" value="ou=active,ou=employees,ou=people,o=cisex.com"/>
+    </bean>
+
+    <bean id="ldapTemplate" class="org.springframework.ldap.core.LdapTemplate">
+        <constructor-arg ref="contextSource"/>
+    </bean>
+
+    <bean name="cecDao_no_cache" class="com.webex.qd.dao.CECInfoDaoImpl">
+        <property name="ldapTemplate" ref="ldapTemplate"/>
+    </bean>
+
+    <bean id="applicationContextProvider" class="com.webex.qd.spring.ApplicationContextProvider"></bean>
+</beans>

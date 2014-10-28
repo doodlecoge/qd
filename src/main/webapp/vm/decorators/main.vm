@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<head>
+    <META HTTP-EQUIV="CACHE-CONTROL" CONTENT="NO-CACHE">
+    <title>${title} - Quality Dashboard -</title>
+    <link rel="stylesheet" type="text/css" media="screen" href="${base}/css/common.css?t=${ver}" />
+    <link rel="stylesheet" type="text/css" media="screen" href='${base}/css/default.css?t=${ver}' />
+    <link rel="stylesheet" type="text/css" media="screen" href="${base}/css/jquery-ui-1.8.22.custom.css" />
+    <link rel="stylesheet" type="text/css" media="screen" href="${base}/css/nav.css?t=${ver}"/>
+    <link rel="stylesheet" type="text/css" media="screen" href="${base}/css/font-awesome.css"/>
+    <link rel="stylesheet" type="text/css" media="screen" href="${base}/css/jquery.plugins.css"/>
+    <link rel="stylesheet" type="text/css" media="screen" href="${base}/css/bootstrap-combined.min.css"/>
+
+
+    <script type="text/javascript" src="${base}/script/jquery172.js"></script>
+    <script type="text/javascript" src="${base}/script/jquery-ui-1.8.22.custom.min.js"></script>
+    <script type="text/javascript" src="${base}/script/jquery.easywidgets.js?t=${ver}"></script>
+    <script type="text/javascript" src="${base}/script/common.js?t=${ver}"></script>
+    <script type="text/javascript" src="${base}/script/jquery.plugins.js?t=${ver}"></script>
+    <script type="text/javascript" src="${base}/script/qd.js?t=${ver}"></script>
+    <script type="text/javascript" src="${base}/script/widget.js?t=${ver}"></script>
+    <script type="text/javascript" src="${base}/script/example.js?t=${ver}"></script>
+    <script type="text/javascript" src="${base}/script/jquery.form.min.js?t=${ver}"></script>
+    <script type="text/javascript" src="${base}/script/dropdown.js?t=${ver}"></script>
+    <script type="text/javascript" src="${base}/script/jquery.lazyload.js?t=${ver}"></script>
+    <script>
+        function lazyLoadIframe() {
+            var url = $(this).attr('data-original');
+            $(this).attr('src', url);
+        }
+    </script>
+
+
+    ${head}
+</head>
+<body>
+    ${body}
+</body>
+</html>

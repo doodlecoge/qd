@@ -1,0 +1,157 @@
+#* @vtlvariable name="setting" type="com.webex.qd.widget.QddtsWidget.Configuration" *#
+<script type="text/javascript" src="${base}/script/qddts/qddts_cache.js"></script>
+<style>
+    .tbl {
+        table-layout: auto;
+    }
+    #query_info {
+        font-family: Arial;
+        font-size: 12px;
+        color: #666;
+        white-space: nowrap;
+        text-align: center;
+    }
+</style>
+<script>
+    var qd = qd || {};
+    qd.loadMuli = function () {
+        var QUERYS = [];
+        var DATAS = [];
+        var ava = false;
+        #foreach($c in $setting.criterias)
+            QUERYS.push({
+                "query": '$c.advancedQuery',
+                "name": '$!c.displayName',
+                "detailUrl": '$!c.detailsUrl'
+            });
+        #end
+        $.each(QUERYS, function (i, query) {
+            $.getJSON(qd.qddts_cache_info.QDDTS_CACHE_SERVER_PATH_FULL_SIMPLE + "?callback=?"
+                    , {
+                        "query": query["query"]
+
+                    }, function (data) {
+                        data["name"] = query["name"];
+                        data["detailurl"] = query["detailUrl"];
+                        handleBugs(data);
+                    }
+            );
+        });
+        var handleBugs = function (data) {
+            DATAS.push(data);
+            if (DATAS.length == QUERYS.length) {
+                showMultiTable(DATAS);
+                resize();
+            }
+        };
+        var showMultiTable = function (datas) {
+            var content = $('#content');
+            content.empty();
+            var sumList = [];
+            var StatusRes = 'A,C,D,F,H,I,J,M,N,O,P,R,S,U,V,W'.split(',');
+            $.each(datas, function (i, data) {
+                        if (data["valid"]) {
+                            ava = true;
+                            var sum = {};
+
+                            $.each(data["bugDetailList"], function (j, bug) {
+                                var key = bug["status"];
+                                sum[key] = sum[key] ? sum[key] + 1 : 1;
+                            });
+                            sum["total"] = data["bugDetailList"].length;
+                            sum["query"] = data["query"];
+                            sum["displayName"] = data["name"];
+                            sum["detailurl"] = data["detailurl"];
+                            sumList.push(sum);
+                        }
+                    }
+            );
+            if (ava) {
+                attachSeverityStatusTable(content, sumList);
+            } else {
+                $("#projects").empty();
+                $("#query_info").empty().append($("<span>").css("color", "red").css("font-size", "13px").html("Sorry,the query is incorrect,please check the querys or <a href='mailto:qd-dev@cisex.com' style='color:blue;font-size:13px;'>Contact Us</a>"));
+            }
+
+
+        };
+        var attachSeverityStatusTable = function (parent, dataList) {
+            var tbl = $('<table class="tbl"></table>');
+            var StatusRes = 'A,C,D,F,H,I,J,M,N,O,P,R,S,U,V,W'.split(',');
+
+            var templateArr = [];
+            $.each(StatusRes, function (i, ele) {
+                templateArr.push(function () {
+                    return "<td><a target='_blank' href=\"" + qd.qddts_query_url + "{query}{filter} and Status:" + ele + "\">{" + ele + "}</a></td>"
+                })
+            });
+            var templateArr2 = [];
+            $.each(StatusRes, function (i, ele) {
+                templateArr2.push(function () {
+                    return "<td>{" + ele + "}</td>"
+                })
+            });
+            var valueTemplateArr = [];
+            $.each(StatusRes, function (i, ele) {
+                valueTemplateArr.push(function (value) {
+                    if (value) {
+                        return value;
+                    }
+                    return 0;
+                })
+            });
+            var valueFunc = function (value) {
+                return value
+            };
+            var detailFunc = function (value) {
+                if (value) {
+                    if (value.trim() != '') {
+                        return value.trim();
+                    }
+                }
+                return '\#\#\#\#';
+            };
+            var templeteTotal =function () {
+                        return "<td><a target='_blank' href=\"" + qd.qddts_query_url + "{query}\">{total}</a></td>"
+                    };
+
+            var varArr = [valueFunc, valueFunc, detailFunc].concat(valueTemplateArr).concat(valueFunc);
+            var tableTemplateArr = [function () {
+                return "<td title='{title}'><a href='{detailurl}' target='_blank'>{displayName}</a></td>"
+            }].concat(templateArr);
+
+            tbl.renderTable(dataList, ["displayName", "query", "detailurl"].concat(StatusRes).concat("total"), tableTemplateArr.concat(templeteTotal), varArr);
+            tbl.renderTableHeader(["DisplayName"].concat(StatusRes).concat("Total"));
+            tbl.renderTableFooter(dataList, StatusRes.concat("total"), [function () {
+                return "<td>Total</td>"
+            }].concat(templateArr2).concat(function(){return "<td>{total}</td>"}), valueTemplateArr.concat(valueFunc));
+            //tbl = fixTable(tbl);
+            parent.append(tbl);
+        };
+        var fixTable = function (tbl) {
+            var links = tbl.find("tfoot td");
+            for (var i = links.length - 1; i >= 0; i--) {
+                if ($(links[i]).html() == '0') {
+                    var td = $(links[i]);
+                    var col = td.parent().children("td").index(td);
+                    tbl.find("thead tr th:eq(" + col + ")").remove();
+                    var trs = tbl.find("tbody tr");
+                    $.each(trs, function (i, tr) {
+                        $(tr).find("td:eq(" + col + ")").remove();
+                    });
+                    tbl.find("tfoot tr td:eq(" + col + ")").remove();
+                }
+
+            }
+            return tbl;
+        };
+    };
+    qd.loadMuli();
+
+
+</script>
+<div id="content" style="text-align: center">
+    <img src="${base}/images/loading.gif" alt=""/>
+</div>
+<div id="query_info" style="margin-top: 10px">
+</div>

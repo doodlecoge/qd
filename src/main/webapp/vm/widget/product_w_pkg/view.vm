@@ -1,0 +1,290 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <link type="text/css" rel="stylesheet" href="${base}/css/jquery.plugins.css"/>
+    <script type="text/javascript" src="${base}/script/jquery172.js"></script>
+    <script type="text/javascript" src="${base}/script/common.js"></script>
+    <script type="text/javascript" src="${base}/script/jquery.plugins.js"></script>
+
+    <style type="text/css">
+        .pc-grp {
+            background: url("../images/arrows-dark.png") no-repeat scroll right -109px transparent;
+            padding-right: 20px;
+            text-decoration: none;
+        }
+
+        .expanded {
+            background: url("../images/arrows-dark.png") no-repeat scroll right -1px transparent;
+        }
+
+        a {
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+    <script type="text/javascript">
+
+        $(function () {
+            resizeIfrmSize("view");
+
+
+            $(".tbl").click(function(e) {
+
+                var el = $(e.target);
+                var tr = el.parents('tr[pkg]');
+                if(tr.length == 0) return;
+
+                tr.find("a.pc-grp").toggleClass("expanded");
+
+                var pkg = tr.attr('pkg');
+
+                $(this).find('tr[pid]').each(function(i, sub) {
+                    if($(sub).attr('pid') == pkg)
+                    $(sub).toggle();
+                });
+
+                resizeIfrmSize('view');
+            });
+
+            $(".tbl").SorTable('init');
+            $(".tbl").SorTable('option', 'on-sorting', function(dir, th) {
+                th.siblings().removeClass("asc");
+                th.siblings().removeClass("desc");
+            });
+
+            $(".tbl").SorTable('option', 'on-sorted', function(dir, th) {
+                var tbl = this;
+
+                this.find("tr[pkg]").each(function(idx, tr) {
+                    var tr = $(tr);
+                    var pkg = tr.attr('pkg');
+
+                    tbl.find('tr[pid]').each(function() {
+                        if($(this).attr('pid') == pkg) {
+                            $(this).insertAfter(tr);
+                        }
+                    });
+
+
+                    //tbl.find('tr[pid=' + pkg + ']').insertAfter(tr).toggle(false);
+                    tr.find('a').removeClass('expanded');
+                });
+            });
+            $("table.tbl").SorTable('setComparator', function(colA, colB) {
+                var reg = /^([+-]?[0-9]+[.]?[0-9]+)%/;
+
+                var a = $.trim($(colA).html());
+                var b = $.trim($(colB).html());
+
+                if(a.match(reg)) a = parseFloat(a.match(reg)[1]);
+                if(b.match(reg)) b = parseFloat(b.match(reg)[1]);
+
+                return a > b ? 1 : -1;
+            }, 3);
+            $("table.tbl").SorTable('sort', 3);
+        });
+
+
+    </script>
+</head>
+<body style="padding: 0; margin: 0;">
+<div>
+    #if(!$data)
+        <div style="height: 100px; line-height: 100px; text-align: center;">
+            Please Edit Your Project View.
+        </div>
+    #else
+        #set($haz = false)
+        #set($covs = $data.getCoverages())
+
+        #if($covs && $covs.size() > 0)
+            #set($haz = true)
+        #end
+
+        <table width="100%" class="tbl" cellpadding="5" cellspacing="1">
+            <colgroup>
+                <col>
+                <col style="width: 80px">
+                <col style="width: 80px">
+                <col style="width: 80px">
+                #if($haz)
+                    <col style="width: 80px">
+                #end
+                <col style="width: 18%">
+            </colgroup>
+            <thead>
+            <tr>
+                <th>Project</th>
+                <th class="num" title="Total Cases"><a href="javascript:void(0)">Cases</a></th>
+                <th class="num" title="Fail Cases"><a href="javascript:void(0)">Fail Cases</a></th>
+                <th class="num" title="Pass Rate"><a href="javascript:void(0)">Pass Rate</a></th>
+
+                #if($haz)
+                    <th class="num" title="Coverage"><a href="javascript:void(0)">Coverage</a></th>
+                #end
+
+                <th class="date" title="Last Modify Time"><a href="javascript:void(0)">Last Modify Time</a></th>
+            </tr>
+            </thead>
+
+            #set($pkgs = $setting.get("project_codes"))
+
+            #foreach($pc in $pkgs.get('--'))
+
+                <tr>
+                    <td title="$data.getStat($pc).projectCode">
+                        <a href="$rptBaseUrl/tasche/reports/viewGenericReport.action?projectCode=$data.getStat($pc).projectCode&buildNumber=$data.getStat($pc).buildNumber"
+                           target="_blank"
+                           style="text-decoration: none;">
+                            $data.getStat($pc).projectCode
+                        </a>
+                    </td>
+                    <td class="num">$data.getStat($pc).totalCase</td>
+                    <td class="num">$data.getStat($pc).failedCase</td>
+                    <td class="num">
+                        $data.getStat($pc).passrate%
+                        <div class="pass_bar_total">
+                            <div class="pass_bar_pass" style="width:$data.getStat($pc).passrate%;"></div>
+                        </div>
+                    </td>
+                    #if($haz)
+                            #if($covs.get($pc))
+                            <td class="num">
+                                <a target="_blank" href="$covs.get($pc).url">$covs.get($pc).passrate%</a>
+
+                                <div class="pass_bar_total">
+                                    <div class="pass_bar_pass" style="width:$covs.get($pc).passrate%;"></div>
+                                </div>
+                            #else
+                            <td class="num dim">
+                                N/A
+                            #end
+                        </td>
+                    #end
+                    <td class="date">$data.getStat($pc).dateCreated</td>
+                </tr>
+
+            #end
+
+            #foreach($kk in $pkgs.keySet())
+                #if($kk != '--')
+
+                    #set($ppcc = $pkgs.get($kk))
+                    #set($ttff = $data.getTotal($ppcc))
+
+                    <tr pkg="$kk" style="cursor: pointer;">
+                        <td class="normal ellips" title="click to toggle expand and collapse">
+                            <a class="pc-grp">$kk</a>
+                        </td>
+                        <td class="num">$ttff.totalCase</td>
+                        <td class="num">$ttff.failedCase</td>
+                        <td class="num">
+                            $ttff.passrate%
+                            <div class="pass_bar_total">
+                                <div class="pass_bar_pass" style="width:$ttff.passrate%;"></div>
+                            </div>
+                        </td>
+                        #if($haz)
+                                #set($covPkg = $data.getTotalCoverage($ppcc))
+                                #if($covPkg == -1)
+                                <td class="num dim">
+                                    N/A
+                                #else
+                                <td class="num">
+                                    $math.roundTo(1, $covPkg)%
+                                #end
+                            </td>
+                        #end
+                        <td class="date">
+                            #set($stats = $pkgs.get($kk))
+
+                            #if($stats.size() > 0)
+                                #set($dc0 = $data.getStat($pkgs.get($kk)[0]).dateCreated)
+                                #if($dc0)
+                                    $dc0
+                                #end
+                            #end
+##
+##                            #set($dc1 = $data.getStat($pkgs.get($kk)[1]).dateCreated)
+##                            #if($dc1)
+##                                $dc1
+##                            #else
+##                                #set($dc0 = $data.getStat($pkgs.get($kk)[0]).dateCreated)
+##                                #if($dc0)
+##                                    $dc0
+##                                #end
+##                            #end
+##                            $pkgs.get($kk).
+                        </td>
+                    </tr>
+
+                    #foreach($pc in $pkgs.get($kk))
+
+                        <tr pid="$kk" style="display: none;">
+                            <td class="normal ellips" title="$data.getStat($pc).projectCode">
+                                <a href="$rptBaseUrl/tasche/reports/viewGenericReport.action?projectCode=$data.getStat($pc).projectCode&buildNumber=$data.getStat($pc).buildNumber"
+                                   target="_blank" style="padding-left: 15px;">
+                                    $data.getStat($pc).projectCode
+                                </a>
+                            </td>
+                            <td class="num">$data.getStat($pc).totalCase</td>
+                            <td class="num">$data.getStat($pc).failedCase</td>
+                            <td class="num">
+                                $data.getStat($pc).passrate%
+                                <div class="pass_bar_total">
+                                    <div class="pass_bar_pass" style="width:$data.getStat($pc).passrate%;"></div>
+                                </div>
+                            </td>
+
+                            #if($haz)
+                                    #if($covs.get($pc))
+                                    <td class="num">
+                                        <a target="_blank" href="$covs.get($pc).url">$covs.get($pc).passrate%</a>
+
+                                        <div class="pass_bar_total">
+                                            <div class="pass_bar_pass" style="width:$covs.get($pc).passrate%;"></div>
+                                        </div>
+                                    #else
+                                    <td class="num dim">
+                                        N/A
+                                    #end
+                                </td>
+                            #end
+                            <td class="date">$data.getStat($pc).dateCreated</td>
+                        </tr>
+
+                    #end
+                #end
+            #end
+
+
+            <tfoot>
+            <tr>
+                <td>Total</td>
+                <td class="num">$data.getTotal().totalCase</td>
+                <td class="num">$data.getTotal().failedCase</td>
+                <td class="num">
+                    $data.getTotal().passrate%
+                    <div class="pass_bar_total">
+                        <div class="pass_bar_pass" style="width:$data.getTotal().passrate%;"></div>
+                    </div>
+                </td>
+                #if($haz)
+                    <td class="num">
+                        $math.roundTo(1, $data.getTotalCoverage())%
+                        <div class="pass_bar_total">
+                            <div class="pass_bar_pass" style="width:$data.getTotalCoverage()%;"></div>
+                        </div>
+                    </td>
+                #end
+                <td></td>
+            </tr>
+            </tfoot>
+        </table>
+    #end
+</div>
+</body>
+</html>

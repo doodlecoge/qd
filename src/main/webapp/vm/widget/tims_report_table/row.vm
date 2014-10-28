@@ -1,0 +1,31 @@
+#* @vtlvariable name="data"     type="com.webex.qd.widget.TimsReportWidget.Data" *#
+    <td style="text-overflow: ellipsis;overflow: hidden" class="tims_id">
+        <img style="vertical-align:middle;margin-right:3px;" alt="" src="${base}/images/tims/folder.gif">
+        <a href="http://tims.cisex.com/warp.cmd?ent=$data.reportId" target="_blank">$data.resultsSummaryReport.title</a></td>
+
+        <td style="text-align:center">
+            $data.aggregateByCategory("total")</td>
+
+        <td style="text-align:center">
+            $data.aggregateByCategory("pending") ($data.aggregatedPercentageByCategory("pending"))</td>
+
+        <td style="text-align:center">
+            $data.aggregateByCategory("blocked") ($data.aggregatedPercentageByCategory("blocked"))</td>
+
+        <td style="text-align:center">
+            $data.aggregateByCategory("passed") ($data.aggregatedPercentageByCategory("passed"))</td>
+
+        <td style="text-align:center">
+            $data.aggregateByCategory("passx") ($data.aggregatedPercentageByCategory("passx"))</td>
+
+        <td style="text-align:center">
+            $data.aggregateByCategory("failed") ($data.aggregatedPercentageByCategory("failed"))</td>
+
+        <td style="text-align:center">
+            $data.aggregateByCategory("dropped") ($data.aggregatedPercentageByCategory("dropped"))</td>
+
+        <td style="text-align:center">
+            $data.aggregateByCategory("executed")</td>
+
+        <td style="text-align:center">
+            $data.aggregateByCategory("defects")</td>

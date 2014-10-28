@@ -1,0 +1,236 @@
+#* @vtlvariable name="setting" type="com.webex.qd.widget.SonarWidget.Configuration" *#
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <script type="text/javascript" src="/qd/script/jquery172.js"></script>
+    <script type="text/javascript" src="/qd/script/jquery.form.min.js"></script>
+    <script type="text/javascript" src="/qd/script/common.js"></script>
+
+    <link type="text/css" rel="stylesheet" href="/qd/css/common.css"/>
+    <link type="text/css" rel="stylesheet" href="/qd/css/setting.css"/>
+    <link type="text/css" rel="stylesheet" href="${base}/css/setting_common.css"/>
+    <script type="text/javascript">
+        $(function () {
+            var sonar_lst = $("#sonar_lst");
+            sonar_lst.click(function (e) {
+                var el = $(e.target);
+                if (el.hasClass('del')) {
+                    safelyDeleteParentRow(el.parent().parent());
+                    resizeIfrmSize("setting");
+                } else if (el.hasClass('addchild')) {
+                    appendChild(el.parent().parent());
+                    resizeIfrmSize("setting");
+                }
+            });
+            var addNewRowClick = function () {
+                var maxIdx = $("#sonar_lst tbody tr.parent").last().attr("eidx");
+                var newIdx = 1;
+                if (maxIdx != null) {
+                    newIdx = parseInt(maxIdx) + 1;
+                }
+                addNewRow(newIdx);
+                resizeIfrmSize("setting");
+            };
+            if (sonar_lst.find("tbody tr").length == 0) {
+                addNewRow(0);
+                resizeIfrmSize("setting");
+            }
+            $("#add").click(addNewRowClick);
+        });
+
+        function addNewRow(idx) {
+            var tr = $('<tr></tr>');
+            tr.attr("eidx", idx);
+            tr.attr("class", "parent");
+
+            var nameTd = $('<td><input name="" type="text" style="width: 90%" class="text ui-corner-all ui-widget-content"></td>');
+            nameTd.children().first().attr("name", "entries[" + idx + "].name");
+            tr.append(nameTd);
+
+            var sonarUrlTd = $('<td><input name="" type="text" style="width: 90%" class="text ui-corner-all ui-widget-content"></td>');
+            sonarUrlTd.children().first().attr("name", "entries[" + idx + "].sonarUrl");
+            tr.append(sonarUrlTd);
+
+            var resourceIdTd = $('<td><input name="" type="text" style="width: 90%" class="text ui-corner-all ui-widget-content"></td>');
+            resourceIdTd.children().first().attr("name", "entries[" + idx + "].resourceId");
+            tr.append(resourceIdTd);
+
+            var addChildTd = $('<td><a href="javascript:void(0)" class="btn01 addchild">Add child</a></td>');
+            tr.append(addChildTd);
+
+            var deleteButton = $('<td><a class="btn01 del" href="javascript:void(0)">Delete</a></td>');
+            tr.append(deleteButton);
+            $("#sonar_lst tbody:first").append(tr);
+        }
+
+        function appendChild(parentRow) {
+            var lastChildIndex = lastChildIndexOf(parentRow);
+            var newIdx = 1;
+            if (lastChildIndex != null) {
+                newIdx = parseInt(lastChildIndex) + 1;
+            }
+            _appendChild(parentRow, newIdx);
+        }
+
+        function _appendChild(parentRow, index) {
+            var lastChild = lastChildRow(parentRow);
+            var parentIndex = parseInt(parentRow.attr("eidx"));
+            var tr = $('<tr></tr>');
+            tr.attr("cidx", index);
+            tr.attr("class", "child");
+
+            var nameTd = $('<td class="child_td1"><input type="text" style="width: 90%" class="text ui-corner-all ui-widget-content"></td>');
+            nameTd.children().first().attr("name", "entries[" + parentIndex + "].groups[" + index + "].name");
+            tr.append(nameTd);
+
+            var sonarUrlTd = $('<td><input name="" type="text" style="width: 90%" class="text ui-corner-all ui-widget-content"></td>');
+            sonarUrlTd.children().first().attr("name", "entries[" + parentIndex + "].groups[" + index + "].sonarUrl");
+            tr.append(sonarUrlTd);
+
+            var resourceIdTd = $('<td><input name="" type="text" style="width: 90%" class="text ui-corner-all ui-widget-content"></td>');
+            resourceIdTd.children().first().attr("name", "entries[" + parentIndex + "].groups[" + index + "].resourceId");
+            tr.append(resourceIdTd);
+
+            var emptyTd = $('<td></td>');
+            tr.append(emptyTd);
+
+            var deleteButton = $('<td><a class="btn01 del" href="javascript:void(0)">Delete</a></td>');
+            tr.append(deleteButton);
+            var insertAfter = lastChildRow(parentRow);
+            if (insertAfter == null) {
+                insertAfter = parentRow;
+            }
+            insertAfter.after(tr);
+        }
+
+        function deleteChildrenFromParent(parentRow) {
+            var child = firstChildRow(parentRow);
+            while (child != null) {
+                deleteRow(child);
+                child = firstChildRow(parentRow);
+            }
+        }
+
+        function isChildRow(row) {
+            return row.hasClass("child");
+        }
+
+        function lastChildIndexOf(parentRow) {
+            var lastChild = lastChildRow(parentRow);
+            if (lastChild == null)
+                return -1;
+            else {
+                return parseInt(lastChild.attr("cidx"));
+            }
+        }
+
+        function firstChildRow(parentRow) {
+            var nextRow = parentRow.next();
+            if (isChildRow(nextRow))
+                return nextRow;
+            else
+                return null;
+        }
+
+        function lastChildRow(parentRow) {
+            var lastChild;
+            var nextRow = parentRow.next();
+            while (nextRow.size() > 0) {
+                if (!isChildRow(nextRow)) {
+                    break;
+                } else {
+                    lastChild = nextRow;
+                }
+                nextRow = nextRow.next();
+            }
+            return lastChild;
+        }
+
+        function safelyDeleteParentRow(row) {
+            if (!row.hasClass("child")) {
+                deleteChildrenFromParent(row);
+            }
+            deleteRow(row);
+        }
+
+        function deleteRow(row) {
+            row.remove();
+        }
+    </script>
+</head>
+<body>
+<form id="jsonForm" action="save" method="post">
+    <ul>
+        <li>
+            <span>Widget Name:</span><br>
+            <input type="text" value="Sonar(Unit Test/Static Analysis/Code Coverage)" style="width: 90%" name="name"
+                   id="name" class="text ui-corner-all ui-widget-content">
+        </li>
+
+
+        <li>
+            <span>Sonar Settings:</span>
+            <table class="tbl" id="sonar_lst" width="100%">
+                <thead>
+                <tr>
+                    <th width="20%">Display Name</th>
+                    <th>Sonar URL<i class="req"></i></th>
+                    <th width="10%">Resource Key<i class="req"></i></th>
+                    <th width="15%">Group operation</th>
+                    <th width="15%"></th>
+                </tr>
+                </thead>
+
+
+                <tbody>
+
+                    #set($idx = 0)
+                    #foreach($entry in $setting.sonars)
+                    <tr eidx='$idx' class="parent">
+                        <td><input name="entries[$idx].name" type="text" style="width: 90%"
+                                   class="text ui-corner-all ui-widget-content" value="$entry.name"></td>
+                        <td><input name="entries[$idx].url" type="text" style="width: 90%"
+                                   class="text ui-corner-all ui-widget-content" value="$!entry.url"></td>
+                        <td><input name="entries[$idx].resourceId" type="text" style="width: 90%"
+                                   class="text ui-corner-all ui-widget-content" value="$entry.resourceId"></td>
+                        <td><a href="javascript:void(0)" class="btn01 addchild">Add child</a></td>
+                        <td><a class="btn01 del" href="javascript:void(0)">Delete</a></td>
+                    </tr>
+                        #set($cidx = 0)
+                        #foreach($child in $entry.groups)
+                        <tr cidx='$cidx' class="child">
+                            <td class="child_td1"><input name="entries[$idx].groups[$cidx].name" type="text"
+                                                         style="width: 90%" class="text ui-corner-all ui-widget-content"
+                                                         value="$child.name"></td>
+                            <td><input name="entries[$idx].groups[$cidx].url" type="text" style="width: 90%"
+                                       class="text ui-corner-all ui-widget-content" value="$!child.url"></td>
+                            <td><input name="entries[$idx].groups[$cidx].resourceId" type="text" style="width: 90%"
+                                       class="text ui-corner-all ui-widget-content" value="$child.resourceId"></td>
+                            <td></td>
+                            <td><a class="btn01 del" href="javascript:void(0)">Delete</a></td>
+                        </tr>
+                            #set($cidx = $cidx + 1)
+                        #end
+                        #set($idx = $idx + 1)
+                    #end
+
+
+                </tbody>
+
+
+                <tfoot>
+                <tr style="min-height: 35px; height: 35px;">
+                    <td colspan="3"></td>
+                    <td colspan="2" style="text-align: center;">
+                        <a href="javascript:void(0)" class="btn01" id="add">Add More ...</a>
+                    </td>
+                </tr>
+                </tfoot>
+            </table>
+        </li>
+    </ul>
+</form>
+</body>
+</html>

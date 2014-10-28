@@ -1,0 +1,148 @@
+#* @vtlvariable name="search_term"     type="java.lang.String" *#
+#* @vtlvariable name="search_results"     type="java.util.List<com.webex.qd.vo.Dashboard>" *#
+#* @vtlvariable name="admin"     type="boolean" *#
+#* @vtlvariable name="fav"     type="java.util.List<java.lang.Integer>" *#
+<style type="text/css">
+    ul.search {
+        padding: 0;
+        margin: 0;
+    }
+
+    ul.search li {
+        list-style: none;
+        height: 25px;
+        line-height: 25px;
+    }
+
+    ul.search a {
+        font-size: 14px;
+        font-weight: bold;
+        text-decoration: none;
+        color: #333;
+    }
+
+    ul.search a:hover {
+        color: #69f;
+    }
+
+    ul.search .fav {
+        color: #9cf;
+    }
+
+    ul.search .s {
+        font-size: 12px;
+    }
+
+    i {
+        font-weight: bold;
+        color: #8a2be2;
+    }
+</style>
+<input type="hidden" id="search_term" value="$search_term"/>
+
+<div style="color: #1e90ff; font-size: 16px; font-weight: bold;">
+    Click <i class="icon-heart" style="color: #000;"></i>,
+    <i class="icon-heart-empty" style="color: #000;"></i>,
+    <i class="icon-remove" style="color: #000;"></i>
+    to unsubscribe, subscribe, delete the dashboard.
+</div>
+
+#if($search_results && $search_results.size() > 0)
+<ul class="search">
+    #foreach($db in $search_results)
+        <li dbid="$db.id">
+            #if($principal)
+                #if($fav.contains($db.id))
+                    #if($user.id != $db.uid)
+                        <a href="javascript:void(0)" class="f fav" title="unsubscribe"><i class="icon-heart"></i></a>
+                    #else
+                        <i class="icon-heart" style="color: transparent;"></i>
+                    #end
+                #else
+                    <a href="javascript:void(0)" class="f" title="subscribe">
+                        <i class="icon-heart-empty"></i>
+                    </a>
+                #end
+
+                #if($admin)
+                    <a href="javascript:void(0)" class="del" title="delete this dashboard">
+                        <i class="icon-remove"></i>
+                    </a>
+                #end
+            #end
+
+            <a href="$base/dashboard/$db.id" class="s">$db.name</a>
+        </li>
+    #end
+</ul>
+#else
+Nothing Found!
+#end
+
+
+#if($principal)
+
+<script type="text/javascript">
+    $("ul.search").click(function (e) {
+        var tag = $(e.target);
+
+        if(tag.length > 0 && tag.get(0).nodeName.toLowerCase() != 'a') {
+            tag = tag.parent();
+        }
+
+        if (tag.hasClass("f")) {
+            var par = tag.parent();
+
+            var dbid = par.attr('dbid');
+
+            toggle_fav(dbid, update_search);
+
+        }
+
+        if (tag.hasClass("del")) {
+            var b = confirm('delete this dashboard?')
+            if(!b) return;
+
+            var dbid = tag.parent().attr('dbid');
+            del_db(tag, dbid);
+        }
+    });
+
+
+    function update_dashboard_name(tag, dbid, dbname) {
+        $.post('chg_db_name', {id: dbid, name: dbname}, function (data) {
+            var o = eval('(' + data + ')');
+
+            if (o.id) {
+                var lis = $("ul.nav").find("a[dbid=" + o.id + "]");
+                $(lis.get(0)).html(o.name);
+                if (tag) tag.html(o.name);
+            }
+        });
+    }
+
+
+    function del_db(tag, _dbid) {
+        $.get('${base}/dashboard/del_db', {dbid: _dbid}, function (data) {
+            var ret = eval('(' + data + ')');
+
+            if (ret['statusCode'] == 0) {
+                update_nav_bar();
+                tag.parent().remove();
+            } else {
+                var msg = ret['statusMessage'];
+                if(!msg) msg = 'delete failed.';
+                alert(msg);
+            }
+        });
+    }
+
+    function update_search() {
+        var cont = $("#dialog_cc").find(".content");
+        $.get('${base}/dashboard/search_db', {key: $("#search_term").val()}, function (data) {
+            cont.html(data);
+        });
+    }
+</script>
+
+#end

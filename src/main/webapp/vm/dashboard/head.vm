@@ -1,0 +1,58 @@
+#* @vtlvariable name="principal"     type="org.springframework.security.ldap.userdetails.InetOrgPerson" *#
+#* @vtlvariable name="GLOBAL_WORKSPACES"     type="java.util.List<com.webex.qd.vo.Workspace>" *#
+#* @vtlvariable name="GLOBAL_CURRENT_WORKSPACE"     type="java.lang.String" *#
+<script type=text/javascript>
+    function switchWorkspace() {
+        var switchTo = $("#workspace")[0].value;
+        window.location = "${base}/dashboard/save_ws?workspace=" + switchTo;
+    }
+</script>
+<div id="wphead">
+    <div class="user-info">
+        <span style="color: white;">Switch BU</span>
+        <select id="workspace" style="margin-right: 20px;" onchange="javascript:switchWorkspace()">
+            #foreach($ws in $GLOBAL_WORKSPACES)
+                #if ($ws.name == $GLOBAL_CURRENT_WORKSPACE)
+                    <option value="$ws.name" selected="selected">$ws.name</option>
+                #else
+                    <option value="$ws.name">$ws.name</option>
+                #end
+
+            #end
+        </select>
+        #if($principal)
+            #set($url = "http://wwwin.cisex.com/dir/photo/tn/" + $principal.username + ".jpg")
+
+            <div class="metadata">
+                <a href="http://wwwin-tools.cisex.com/dir/details/$principal.username" target="_blank">
+                    $principal.displayName ($principal.username)
+                </a>
+                <br/>
+                <a href="${base}/logout?url=$request.getRequestURL()">Logout</a>
+            </div>
+
+            <div class="img"
+                 style="background: url($url) 0 0 no-repeat;">
+            </div>
+        #else
+
+            <div class="metadata">
+                #set($url = $request.getRequestURL())
+                <a href="${base}/login?url=$url">
+                    You are not logged in
+                    <br />
+                    Click to login
+                </a>
+            </div>
+
+            <div class="img"
+                 style="background: url(${base}/images/notlogged.png) 0 0 no-repeat;">
+            </div>
+        #end
+    </div>
+    <a href="${base}">
+    <div class="logo">
+        <img id="wbx_ball" src="${base}/images/wbx_ball.png" width="50" height="50" alt="Quality Dashboard" />
+    </div>
+    </a>
+</div>

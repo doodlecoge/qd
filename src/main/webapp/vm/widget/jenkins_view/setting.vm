@@ -1,0 +1,102 @@
+#* @vtlvariable name="setting" type="com.webex.qd.widget.JenkinsViewWidget.Configuration" *#
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <script type="text/javascript" src="${base}/script/jquery172.js"></script>
+    <script type="text/javascript" src="${base}/script/jquery.form.min.js"></script>
+    <script type="text/javascript" src="${base}/script/common.js"></script>
+
+    <link type="text/css" rel="stylesheet" href="${base}/css/common.css" />
+    <link type="text/css" rel="stylesheet" href="${base}/css/setting.css" />
+    <link type="text/css" rel="stylesheet" href="${base}/css/setting_common.css" />
+    <script type="text/javascript">
+        $(function() {
+            var tab_jenkins = $("#jenkins_lst");
+            tab_jenkins.click(function(e) {
+                var el = $(e.target);
+                if(el.hasClass('del')) el.parent().parent().remove();
+            });
+            var addNewRowClick = function() {
+                var maxIdx = $("#jenkins_lst").find("tbody tr").last().attr("eidx");
+                var newIdx = 1;
+                if (maxIdx != null) {
+                    newIdx = parseInt(maxIdx) + 1;
+                }
+
+                addNewRow(newIdx);
+                resizeIfrmSize("setting");
+            };
+            if(tab_jenkins.find("tbody tr").length == 0){
+                addNewRow(0);
+                resizeIfrmSize("setting");
+            }
+            $("#add").click(addNewRowClick);
+        });
+
+        function addNewRow(idx) {
+            var tr = $('<tr></tr>');
+            tr.attr("eidx", idx);
+
+            var nameTd = $('<td><input name="" type="text" style="width: 90%" class="text ui-corner-all ui-widget-content"></td>')
+            nameTd.children().first().attr("name", "configEntries[" + idx + "].displayName");
+            tr.append(nameTd);
+
+            var reportIdTd = $('<td><input name="" type="text" style="width: 90%" class="text ui-corner-all ui-widget-content"></td>')
+            reportIdTd.children().first().attr("name", "configEntries[" + idx + "].viewUrl");
+            tr.append(reportIdTd);
+
+            var deleteButton = $('<td><a class="btn01 del" href="javascript:void(0)">Delete</a></td>');
+            tr.append(deleteButton);
+            $("#jenkins_lst").find("tbody").append(tr);
+        }
+
+        function deleteRow() {
+
+        }
+    </script>
+</head>
+<body>
+<form id="jsonForm" action="save" method="post">
+    <ul>
+        <li>
+            <span>Widget Name:</span><br>
+            <input type="text" value="$name" style="width: 90%" name="name" id="name" class="text ui-corner-all ui-widget-content">
+        </li>
+
+
+        <li>
+            <span>Jenkins View Settings:</span>
+            <table class="tbl" id="jenkins_lst" width="100%">
+                <thead>
+                <tr>
+                    <th>Display Name<i class="req"></i></th>
+                    <th>View URL<i class="req"></i></th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                    #set($idx = 0)
+                    #foreach($entry in $setting.jenkinsViews)
+                    <tr eidx='$idx'>
+                        <td><input name="configEntries[$idx].displayName" type="text" style="width: 90%" class="text ui-corner-all ui-widget-content" value="$entry.displayName"></td>
+                        <td><input name="configEntries[$idx].viewUrl" type="text" style="width: 90%" class="text ui-corner-all ui-widget-content" value="$entry.viewUrl"></td>
+                        <td><a class="btn01 del" href="javascript:void(0)">Delete</a></td>
+                    </tr>
+                        #set($idx = $idx + 1)
+                    #end
+                </tbody>
+                <tfoot>
+                <tr style="min-height: 35px; height: 35px;">
+                    <td colspan="5" style="text-align: right;">
+                        <a href="javascript:void(0)" class="btn01" id="add">Add More ...</a>
+                    </td>
+                </tr>
+                </tfoot>
+            </table>
+        </li>
+    </ul>
+</form>
+</body>
+</html>

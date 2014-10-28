@@ -1,0 +1,154 @@
+.bipt {
+    border: 1px solid #888;
+    padding-top: 5px;
+    margin: 0;
+    line-height: 16px;
+    position: relative;
+
+    font-family: Arial;
+    font-size: 12px;
+}
+
+.hid {
+    display: none;
+}
+
+.ib {
+    display: -moz-inline-stack;
+    display: inline-block;
+    *display: inline;
+    zoom: 1;
+}
+
+a.del {
+    text-align: center;
+
+    text-decoration: none;
+    outline: none;
+
+    border: 1px solid #36c;
+    background: #cde;
+    border-left: 0;
+    padding: 0 5px 0 3px;
+
+    cursor: pointer;
+
+    -webkit-border-radius: 0 8px 8px 0;
+    -moz-border-radius: 0 8px 8px 0;
+    border-radius: 0 8px 8px 0;
+}
+
+a.del:hover {
+    color: #f00;
+    cursor: pointer;
+}
+
+.bipt a.add {
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+    text-align: center;
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
+    border-radius: 8px;
+    border: 1px solid #36c;
+    background: #faa;
+    text-decoration: none;
+    margin: 0 0 5px 5px;
+    font-weight: bold;
+
+}
+
+.bipt .ipt-box {
+    visibility: hidden;
+    margin: 0 0 5px 5px;
+    height: 16px;
+    vertical-align: top;
+}
+
+.bipt .copy {
+    position: absolute;
+    right: 0;
+    top: 0;
+    background: #369;
+    color: #efefef;
+    display: none;
+    padding: 0 10px;
+}
+
+.bipt .copy:hover {
+    color: #faa;
+}
+
+.bipt .copy-box {
+    padding: 5px;
+    padding-top: 0;
+}
+
+.bipt .copy-box .txt-area {
+    display: block;
+    width: 100%;
+    clear: both;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: #efefef;
+    outline: none;
+
+}
+
+.bipt .copy-box .copy-title {
+    color: #f66;
+    font-weight: bold;
+}
+
+.bipt .ipt-box input.ipt {
+    padding: 0;
+    margin: 0;
+    border: 0;
+    height: 16px;
+    line-height: 16px;
+    outline: none;
+    background: transparent;
+    font-size: 12px;
+    font-family: Arial;
+}
+
+.bipt .ipt-box .ipt-width {
+    visibility: hidden;
+    position: absolute;
+}
+
+.bipt a.add:hover {
+    color: red;
+}
+
+.bipt span.item {
+    margin: 0 0 5px 5px;
+    vertical-align: top;
+}
+
+
+
+.bipt span.item .txt {
+    border: 1px solid #36c;
+    background: #cde;
+
+    padding: 0 8px;
+    height: 16px;
+    line-height: 16px;
+    vertical-align: top;
+
+    -webkit-border-radius: 8px 0 0 8px;
+    -moz-border-radius: 8px 0 0 8px;
+    border-radius: 8px 0 0 8px;
+}
+
+.bipt span.item.sel a.del {
+    background: #f93;
+}
+
+.bipt span.item.sel span.txt {
+    background: #f93;
+}
+

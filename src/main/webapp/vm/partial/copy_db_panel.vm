@@ -1,0 +1,34 @@
+#* @vtlvariable name="dbs"     type="java.util.List<com.webex.qd.vo.UserDashboardEntry>" *#
+#* @vtlvariable name="uid"     type="int" *#
+<div id="db_name_txt_container" style="margin-bottom: 10px;">
+    <span>Please enter a new dashboard name :</span>
+    <input id="db_name_txt" style="width: 100%;">
+</div>
+
+<span id="copy_db_msg" style="color: red; font-weight: bold; display: inline-block;margin-bottom: 10px;"></span>
+
+<div style="text-align: left;">
+    <a href="javascript:void(0)" class="btn01 copy_db">OK</a>
+    <a href="javascript:void(0)" class="btn01 cancel">Cancel</a>
+</div>
+
+<script language="javascript" type="text/javascript">
+    $(".cancel").click(function() {
+        hideDialog();
+    })
+    $(".copy_db").click(function() {
+        var name = $.trim($("#db_name_txt").val());
+
+        if (name == '') {
+            $("#copy_db_msg").show(500).html('dashboard name is required');
+            return;
+        }
+
+        if(!name.match(/^[.\-_0-9A-Za-z ]+$/)) {
+            $("#copy_db_msg").show(500).html('only numeric,character,blank space and underscore');
+            return;
+        }
+
+        copyDashboard(name, 2, 0, __DashboardId__);
+    });
+</script>

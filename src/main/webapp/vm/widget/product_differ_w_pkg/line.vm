@@ -1,0 +1,99 @@
+#* @vtlvariable name="diff_line"     type="com.webex.qd.widget.ProductDifferWPkgWidget.DiffedLine" *#
+#* @vtlvariable name="groupLine"     type="boolean" *#
+#* @vtlvariable name="childLine"     type="boolean" *#
+
+#if($groupLine)
+<tr pkg="$diff_line.name" style="cursor: pointer;">
+#elseif($childLine)
+<tr pid="$groupName" style="display: none;">
+#else
+<tr>
+#end
+
+#if($groupLine)
+    <td class="normal ellips" title="click to toggle expand and collapse">
+        <a class="pc-grp">$diff_line.name</a>
+    </td>
+#else
+    <td class="normal ellips" title="$diff_line.getName()">
+        #if($childLine)
+            #if($diff_line.referable)
+            <a href="$rptBaseUrl/tasche/reports/viewGenericDiffReport.action?projectCode=$diff_line.previousStat.projectCode&curBuildNum=$diff_line.currentStat.buildNumber&preBuildNum=$diff_line.previousStat.buildNumber"
+               target="_blank"
+               style="text-decoration: none; padding-left: 15px;">$diff_line.name</a>
+            #else
+                <span style="padding-left: 15px;">$diff_line.name</span>
+            #end
+        #else
+            #if($diff_line.referable)
+            <a href="$rptBaseUrl/tasche/reports/viewGenericDiffReport.action?projectCode=$diff_line.previousStat.projectCode&curBuildNum=$diff_line.currentStat.buildNumber&preBuildNum=$diff_line.previousStat.buildNumber"
+               target="_blank"
+               style="text-decoration: none;">$diff_line.name</a>
+            #else
+                $diff_line.name
+            #end
+        #end
+    </td>
+#end
+
+    <td class="num">
+        #if($diff_line.previousStat)
+            $diff_line.previousStat.totalCase
+        #else
+            N/A
+        #end
+    </td>
+    <td class="num">
+        #if($diff_line.previousStat)
+            $diff_line.previousStat.failedCase
+        #else
+            N/A
+        #end
+    </td>
+    <td class="num">
+        $diff_line.getPassRateAsString($diff_line.previousStat)
+        #if($diff_line.diffAsString != "N/A")
+        <div class="pass_bar_total">
+            <div class="pass_bar_pass"
+                 style="width:$diff_line.getPassRateAsString($diff_line.previousStat);"></div>
+        </div>
+        #end
+    </td>
+
+    <td class="num">
+        #if($diff_line.currentStat)
+            $diff_line.currentStat.totalCase
+        #else
+            N/A
+        #end
+    </td>
+    <td class="num">
+        #if($diff_line.currentStat)
+            $diff_line.currentStat.failedCase
+        #else
+            N/A
+        #end
+    </td>
+    <td class="num">
+        $diff_line.getPassRateAsString($diff_line.currentStat)
+        #if($diff_line.diffAsString != "N/A")
+        <div class="pass_bar_total">
+            <div class="pass_bar_pass"
+                 style="width:$diff_line.getPassRateAsString($diff_line.currentStat);"></div>
+        </div>
+        #end
+    </td>
+#if ($diff_line.diff > 0)
+    <td class="num pass">
+        <span>$diff_line.diffAsString</span>
+    </td>
+#elseif ($diff_line.diff < 0)
+    <td class="num fail">
+        <span>$diff_line.diffAsString</span>
+    </td>
+#else
+    <td class="num normal dim">
+        <span>$diff_line.diffAsString</span>
+    </td>
+#end
+</tr>

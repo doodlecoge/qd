@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+
+    <title>Dashboards</title>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+    <style type="text/css">
+        #all_dbs {
+
+        }
+
+        #all_dbs td a {
+            text-decoration: none;
+        }
+
+        #all_dbs thead td {
+            background: #39b;
+            font-weight: bold;
+            color: white;
+            padding: 5px 5px;
+        }
+
+        #all_dbs tbody td {
+            background: #eee;
+            padding: 2px 5px;
+        }
+
+    </style>
+    <script type="text/javascript">
+
+    </script>
+</head>
+<body>
+
+#if($allDashboards.size() > 0)
+<table id="all_dbs" width="99%" border="2" cellpadding="0" cellspacing="1">
+    <thead>
+        <tr>
+            <td style="width: 20%">Dashboard Name</td>
+            <td style="width: 20%">Owner</td>
+            <td>Member</td>
+        </tr>
+    </thead>
+
+    <tbody>
+        #foreach($db in $allDashboards)
+        <tr>
+            <td><a href="index?id=$db.id">$db.Name</a></td>
+            <td>
+                #foreach($uuu in $db.owners)
+                    $uuu.fullname,
+                #end
+            </td>
+            <td>
+                #foreach($uuu in $db.users)
+                    $uuu.fullname,
+                #end
+            </td>
+        </tr>
+        #end
+    </tbody>
+</table>
+#end
+</body>
+</html>

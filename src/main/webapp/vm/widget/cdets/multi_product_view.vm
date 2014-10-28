@@ -1,0 +1,189 @@
+#* @vtlvariable name="productCondition"     type="com.webex.qd.widget.cdets.CdetsCriteria" *#
+#* @vtlvariable name="setting"                type="com.webex.qd.widget.CdetsWidget.Configuration" *#
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <link type="text/css" rel="stylesheet" href="${base}/css/common.css"/>
+    <link type="text/css" rel="stylesheet" href="${base}/css/sort_tbl.css"/>
+    <link type="text/css" rel="stylesheet" href="${base}/css/jquery-ui-1.8.22.custom.css" />
+    <style type="text/css">
+        table td {
+            text-align: center;
+        }
+
+        .tbl .selcol {
+            background: #fc9;
+        }
+    </style>
+
+    <script src="${base}/script/jquery172.js" type="text/javascript"></script>
+    <script type="text/javascript" src="${base}/script/jquery-ui-1.8.22.custom.min.js"></script>
+    <script src="${base}/script/common.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        var StatusRes = 'A-Assigned,C-Closed,D-Duplicate,F-Forwarded,H-Held,I-Info_req,J-Junked,M-More,N-New,O-Opened,P-Postponed,R-Resolved,U-Unreproducible,V-Verified,W-Wait'.split(',');
+        var Status = 'A,C,D,H,I,J,N,O,P,R,U,V,W'.split(',');
+
+        function getStatusFullName(key) {
+            var fname = null;
+            $.each(StatusRes, function (i, fullName) {
+                if (key == fullName[0]) {
+                    fname = fullName;
+                    return false;
+                }
+            });
+            return fname;
+        }
+
+        function changeWidth(colIndex) {
+            var startingIndex = 0;
+            var table = $(".tbl");
+            table.find('col').css('width', '');
+            table.find('col:eq(' + colIndex + ')').css('width', '100px');
+
+            var thead = table.find('thead');
+            thead.find('th:gt(' + startingIndex + '):not(:last)').each(function (i, th) {
+                var val = $(th).html();
+                $(th).html(val[0]);
+            });
+
+            if (colIndex == 0 || colIndex > 13) return;
+
+            var staVal = thead.find('th:eq(' + (colIndex + startingIndex) + ')').html();
+            var k = staVal[0];
+            thead.find('th:eq(' + (colIndex + startingIndex) + ')').html(getStatusFullName(k));
+        }
+
+        function onMouseLeave(e) {
+            changeWidth(0);
+        }
+
+        function onMouseMove(e) {
+            var tag = e.target.nodeName.toLowerCase();
+            if (tag != 'th' && tag != 'td')
+                return;
+
+            var el = $(e.target);
+            var idx = el.index();
+            changeWidth(idx);
+        }
+
+        function fillNumbers(product, data) {
+            var table = $(".tbl ");
+            var tbody = table.find('tbody');
+            var row = tbody.find('tr[product=' + product +']');
+            var td = row.find("td[colspan=14]");
+            td.remove();
+            row.append("<td status='N'>-</td><td status='A'>-</td><td status='C'>-</td><td status='D'>-</td><td status='H'>-</td><td status='I'>-</td><td status='J'>-</td><td status='O'>-</td><td status='P'>-</td><td status='R'>-</td><td status='U'>-</td><td status='V'>-</td><td status='W'>-</td><td></td>");
+            var total = 0;
+            $.each(Status, function(i, status) {
+                var amount = data[status];
+                var cell = row.find('td[status=' + status + ']');
+                total = total + amount;
+                if (amount == 0)
+                    cell.html("-");
+                else
+                    cell.html("<a target='_blank' href=\"https://cdetsng.cisex.com/webui/#query=(" + data["Query"] + ") AND [Status]='" + status + "'\">" + amount + " </a>");
+            });
+            var totalCell = row.find('td:eq(14)');
+            totalCell.html(total);
+        }
+
+        $(function () {
+            $(".pb").progressbar({
+                value: false
+            });
+            resizeIfrmSize('view');
+
+            var productCount = $setting.criterias.size();
+            for (var i = 0; i < productCount; i++) {
+                $.get("cdets_data_provider", {
+                            widgetId: $widget.id, index: i},
+                        (function (i) {
+                            return function (d) {
+                                fillNumbers(i, d);
+                            }
+                        })(i),
+                        "json");
+            }
+            $(".tbl").mousemove(onMouseMove);
+            $(".tbl").mouseleave(onMouseLeave)
+        });
+    </script>
+</head>
+<body style="padding: 0; margin: 0;">
+    #if($setting.criterias.size() == 0)
+    <div style="height: 100px; line-height: 100px; text-align: center;">
+        Please Edit Widget Settings First.
+    </div>
+    #else
+
+
+    <table class="tbl">
+        <colgroup>
+            <col style="width: 100px;">
+            <col style="">
+            <col style="">
+            <col style="">
+            <col style="">
+            <col style="">
+            <col style="">
+            <col style="">
+            <col style="">
+            <col style="">
+            <col style="">
+            <col style="">
+            <col style="">
+            <col style="">
+            <col style="">
+        </colgroup>
+        <thead>
+        <tr>
+            <th class="txt">Product</th>
+            <th>N</th>
+            <th>A</th>
+            <th>C</th>
+            <th>D</th>
+            <th>H</th>
+            <th>I</th>
+            <th>J</th>
+            <th>O</th>
+            <th>P</th>
+            <th>R</th>
+            <th>U</th>
+            <th>V</th>
+            <th>W</th>
+            <th>Total</th>
+        </tr>
+        </thead>
+    ##            <tfoot>
+    ##            <tr>
+    ##                <td>Total</td>
+    ##                <td>75</td>
+    ##                <td>8</td>
+    ##                <td>7</td>
+    ##                <td>10</td>
+    ##                <td>6</td>
+    ##                <td>5</td>
+    ##                <td>35</td>
+    ##                <td>3</td>
+    ##                <td>54</td>
+    ##                <td>203</td>
+    ##            </tr>
+    ##            </tfoot>
+        <tbody>
+        #set($idx = 0)
+        #foreach($criteria in $setting.criterias)
+        <tr product="$idx">
+            <td class="txt">$criteria.displayName</td>
+            <td colspan="14"><div class="pb"></div></td>
+        </tr>
+            #set($idx = $idx + 1)
+        #end
+        </tbody>
+    </table>
+    #end
+</body>
+</html>
+

@@ -1,0 +1,114 @@
+#* @vtlvariable name="workspaces"     type="java.util.List<com.webex.qd.vo.Dashboard>" *#
+<style type="text/css">
+    #new_workspace_name {
+        width: 60%;
+    }
+    ul.workspace_names_panel {
+        padding: 0;
+        margin: 0;
+    }
+
+    ul.workspace_names_panel li {
+        list-style: none;
+        height: 25px;
+        line-height: 25px;
+        border-bottom: 1px solid #ccc;
+        position: relative;
+        padding-right: 5px;
+    }
+
+    ul.workspace_names_panel li .btns {
+        position: absolute;
+        right: 0;
+        top: 6px;
+        height: 14px;
+        line-height: 14px;
+        padding: 0 5px;
+    }
+
+    ul.workspace_names_panel li:hover {
+        background: #eee;
+    }
+
+    ul.workspace_names_panel li span.dis {
+        color: #ccc;
+    }
+
+    .handle {
+        background-image: url(../images/icons.png);
+        background-repeat: no-repeat;
+        background-position: -305px -3px;
+        height: 25px;
+        line-height: 25px;
+        width: 20px;
+        cursor: move;
+    }
+</style>
+
+<input type="text" id="new_workspace_name" />
+
+<a href="javascript:void(0)" class="btn01 add" id="add_new_workspace">Add</a>
+
+<ul class="workspace_names_panel">
+    #foreach($ws in $workspaces)
+        <li wsid="$ws.id">
+            <span class="handle inline-block">&nbsp;</span>
+            <span class="txt">$ws.name</span>
+            <span class="btns inline-block">
+                <a href="javascript:void(0)" class="btn01 public_db">Manage Public Dashboards</a>
+                <a href="javascript:void(0)" class="btn01 del">&times;</a>
+            </span>
+        </li>
+    #end
+</ul>
+
+<script language="javascript" type="text/javascript">
+    $(".title .txt", "#dialog_cc").html('Workspace Manage');
+
+    $(".public_db").click(function(e) {
+        var el = $(e.target);
+        var wsid = el.parent().parent().attr('wsid');
+        var cont = $("#dialog_cc").find(".content");
+
+        $.get('${base}/dashboard/public_db_manager', {wsId : wsid}, function(data) {
+            cont.html(data);
+        });
+    })
+
+    $("#add_new_workspace").click(function() {
+        var wsName = $("#new_workspace_name").val();
+        var cont = $("#dialog_cc").find(".content");
+
+        $.post('${base}/dashboard/create_workspace', {workspaceName : wsName}, function(apiResult) {
+            if (apiResult.statusCode == -1) {
+                alert(apiResult.statusMessage);
+            } else {
+                var cont = $("#dialog_cc").find(".content");
+                $.get('${base}/dashboard/workspace_manager', function (data) {
+                    cont.html(data);
+                });
+            }
+        });
+    });
+
+    $(".del").click(function(e) {
+        var el = $(e.target);
+        var wsId = el.parent().parent().attr('wsid');
+        if(!confirm('Delete this workspace?')) return;
+
+        var cont = $("#dialog_cc").find(".content");
+
+        $.post('${base}/dashboard/delete_workspace', {workspaceId: wsId}, function (apiResult) {
+            if(apiResult.statusCode == -1)  {
+                alert(apiResult.statusMessage);
+            }
+            else {
+                var cont = $("#dialog_cc").find(".content");
+                $.get('${base}/dashboard/workspace_manager', function (data) {
+                    cont.html(data);
+                });
+            }
+
+        });
+    })
+</script>

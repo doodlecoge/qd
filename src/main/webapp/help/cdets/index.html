@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CDETS [Trend] Widget</title>
+    <link href="../help.css" type="text/css" rel="stylesheet" />
+
+</head>
+<body>
+
+<h3>1. CDETS Widget View</h3>
+
+<a class="img-box">
+    <img src="cdets_view.png" />
+    <i class="lbl">Fig. 1</i>
+</a>
+
+Each line corresponds to a query in <a href="http://cdetsng.cisex.com">CDETS system</a>,
+you may build yours using "Query Builder" in CDETS.
+
+<a class="img-box">
+    <img src="cdets_query.png" />
+    <i class="lbl">Fig. 2</i>
+</a>
+
+<hr/>
+<h3>2. Setting Overview</h3>
+<p>
+    Cdets [Trend] Widget setting consists of one or more "CDETS Advanced Query",
+    each has three components:
+    <ol>
+        <li><i class="key-word">Display Name:</i> helps understand meanings of each number in Fig. 1</li>
+        <li><i class="key-word">Advanced Query:</i> CDETS Defect Query, see Fig. 2 for details.</li>
+        <li><i class="key-word">Details Url:</i> optional, if specified the display name will be clickable, linking to whatever you give.</li>
+    </ol>
+</p>
+
+<div class="note">
+    <h3>Notice, "Advanced Query" should contains Project & Product information</h3>
+    We are not performing real time CDETS query using "Advanced Query"s you specified,
+    because it's time-consuming and will burden CDETS heavily. Instead, we cache defects
+    in CDETS, in a manner of lazy mode: only those needed will be cached. That is, we parse
+    the query, extract product, and if it is not cached already, we will cache the product before
+    displaying it. So it's important to give "Product" & "Project" components when filling "Advanced Query" field,
+    at least for the first time.
+</div>
+
+<a class="img-box">
+    <img src="cdets_setting.png" />
+    <i class="lbl">Fig. 3</i>
+</a>
+
+<hr/>
+<h3>3. Advanced Query Example</h3>
+<pre>
+    Expert search provides an advanced search method in CDETS where users can enter their own search string.
+
+    The following operators are supported: =, >, >=, <, <=, IS NULL, IS NOT NULL, AND, OR, NOT, LIKE, (), <> and wildcards *, ?
+
+    Tips
+    The search syntax is different from SQL and that of QDDTS.
+    Enclose field names in square brackets '[' ']'.
+    Enclose field values in single quotes.
+
+    Examples
+    [Status] = 'R' or [Status] = 'V' and ( [Submitted-on] >= '01/31/2000 00:00:00' and [Submitted-on]<= '01/31/2001 00:00:00' )
+    [Product] = 'cdets' and ( ( [Severity] = '1' or [Severity] = '2' ) or ( [Urgency] = 'P1' or [Urgency] = 'P2' ) )
+
+    Attentions
+    We don't support all the columns in CDETS.Only support the following columns.
+
+        ID          ("Identifier",  "id"),
+        PROJECT     ("Project",     "project"),
+        PRODUCT     ("Product",     "product"),
+        STATUS      ("Status",      "status"),
+        SEVERITY ("Severity", "severity"),
+        DE_MANAGER  ("DE-manager",  "de_manager"),
+        ENGINEER    ("Engineer",    "engineer"),
+        SUBMITTER   ("Submitter",   "submitter"),
+        COMPONENT   ("Component",   "component"),
+        VERSION     ("Version",     "version"),
+        TO_BE_FIXED ("To-be-fixed", "to_be_fixed"),
+        FOUND       ("Found",       "found"),
+        KEYWORD     ("Keyword",     "keyword"),
+        ATTRIBUTE   ("Attribute",   "attribute");
+        A("Assigned Date",  "ATime"),
+        C("Closed-on",      "CTime"),
+        D("Duplicate-on",   "DTime"),
+        F("Forwarded-on",   "FTime"),
+        H("Held-on",        "HTime"),
+        I("Info-req-on",    "ITime"),
+        J("Junked-on",      "JTime"),
+        M("More-on",        "MTime"),
+        N("New-on",         "NTime"),
+        O("Opened-on",      "OTime"),
+        P("Postponed-on",   "PTime"),
+        R("Resolved-on",    "RTime"),
+        S("Submitted-on",   "STime"),
+        U("Unreproducible", "UTime"),
+        V("Verified-on",    "VTime"),
+        W("Waiting-on",     "WTime"),
+        SYS_LAST_UPDATED("Sys-Last-Updated", "sys_last_updated_time");
+</pre>
+
+</body>
+</html>

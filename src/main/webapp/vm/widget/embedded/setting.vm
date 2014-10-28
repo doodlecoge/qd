@@ -1,0 +1,59 @@
+#* @vtlvariable name="setting" type="com.webex.qd.widget.BuildHistoryWidget.Configuration" *#
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <link type="text/css" rel="stylesheet" href="${base}/css/jquery-ui-1.8.22.custom.css" />
+    <link type="text/css" rel="stylesheet" href="${base}/css/common.css" />
+    <link type="text/css" rel="stylesheet" href="${base}/css/jquery.plugins.css" />
+
+    <script type="text/javascript" src="${base}/script/jquery172.js"></script>
+    <script type="text/javascript" src="${base}/script/jquery-ui-1.8.22.custom.min.js"></script>
+
+    <script type="text/javascript" src="${base}/script/common.js"></script>
+    <script type="text/javascript" src="${base}/script/jquery.plugins.js"></script>
+    <link type="text/css" rel="stylesheet" href="${base}/css/setting_common.css" />
+
+    <script type="text/javascript">
+        function getSettings(){
+            return {
+                'url':$('#url').attr('value'),
+                'name':$('#name').attr('value'),
+                'height':$('#height').attr('value')
+            }
+        }
+        $(function(){
+            resize(450);
+        });
+
+    </script>
+
+
+</head>
+
+<body>
+<form id="form" onsubmit="return false;">
+    <ul>
+        <li>
+            <span>Widget Name:</span><br />
+            <input id="name" name="name" style="width: 90%" value='$name' />
+        </li>
+
+
+        <li>
+            <span>Your widget url:</span><br />
+            <input id="url" name="url" style="width: 90%" value='$!{config.url}' />
+            </div>
+        </li>
+        <li>
+            <span>The height of your widget(px):</span><br />
+            <input id="height" name="height" style="width: 90%" value='$!{config.height}' />
+            </div>
+        </li>
+    </ul>
+
+    <div style="height: 100px"></div>
+</form>
+</body>
+</html>

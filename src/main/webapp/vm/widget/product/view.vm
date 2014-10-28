@@ -1,0 +1,167 @@
+#* @vtlvariable name="data"     type="com.webex.qd.widget.ProductWidget.Data" *#
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <link type="text/css" rel="stylesheet" href="${base}/css/jquery.plugins.css" />
+
+    <script type="text/javascript" src="${base}/script/jquery172.js"></script>
+    <script type="text/javascript" src="${base}/script/common.js"></script>
+    <script type="text/javascript" src="${base}/script/jquery.plugins.js"></script>
+
+<style type="text/css">
+    a {
+        text-decoration: none;
+    }
+    a:hover {
+        text-decoration: underline;
+    }
+</style>
+    <script type="text/javascript">
+
+        $(function() {
+//            $("table.tbl").SorTable('init');
+//            $("table.tbl").SorTable('option', 'on-sorting', function(dir, th) {
+//                th.siblings().removeClass('asc');
+//                th.siblings().removeClass('desc');
+//            });
+//            $("table.tbl").SorTable('setComparator', function(colA, colB) {
+//                var reg = /^([0-9]+[.]?[0-9]+)%/;
+//                var a = $.trim($(colA).html());
+//                var b = $.trim($(colB).html());
+//
+//                var m = a.match(reg);
+//                if(m) a = parseFloat(m[1]);
+//                m = b.match(reg);
+//                if(m) b = parseFloat(m[1]);
+//
+//                return a > b ? 1 : -1;
+//            }, 3);
+//
+//            $("table.tbl").SorTable('sort', 3);
+
+            resizeIfrmSize('view');
+        });
+
+
+    </script>
+    
+
+</head>
+<body style="padding: 0; margin: 0;">
+<div>
+    #if(!$data)
+        <div style="height: 100px; line-height: 100px; text-align: center;">
+            Please Edit Your Project View.
+        </div>
+    #else
+
+        #set($haz = false)
+        #set($covs = $data.getCoverages())
+
+        #if($covs && $covs.size() > 0)
+            #set($haz = true)
+        #end
+
+        <table width="100%" class="tbl">
+            <colgroup>
+                <col />
+                <col width="80px"/>
+                <col width="80px"/>
+                <col width="80px"/>
+                #if($haz)
+                    <col width="80px"/>
+                #end
+                <col width="18%"/>
+            </colgroup>
+            <thead>
+            <tr>
+                <th>
+                    <a href="javascript:void(0)">Project</a>
+                </th>
+                <th>
+                    <a href="javascript:void(0)" class="num" title="Total Cases">Cases</a>
+                </th>
+                <th class="fail">
+                    <a href="javascript:void(0)" class="num" title="Fail Cases">Fail Cases</a>
+                </th>
+                <th>
+                    <a href="javascript:void(0)" class="num" title="Pass Rate">Pass Rate</a>
+                </th>
+
+                #if($haz)
+                    <th>
+                        <a href="javascript:void(0)" class="num" title="Coverage">Coverage</a>
+                    </th>
+                #end
+
+                <th>
+                    <a href="javascript:void(0)" class="date" title="Last Modify Time">Last Modify Time</a>
+                </th>
+            </tr>
+            </thead>
+            #foreach($stat in $data.getStats())
+                <tr>
+                    <td class="normal ellips" title="$stat.projectCode">
+                        <a href="$rptBaseUrl/tasche/reports/viewGenericReport.action?projectCode=$stat.projectCode&buildNumber=$stat.buildNumber"
+                           target="_blank">
+                            $stat.projectCode
+                        </a>
+                    </td>
+                    <td class="num normal">$stat.totalCase</td>
+                    <td class="num fail">$stat.failedCase</td>
+                    <td class="num normal">
+                        $stat.passrate%
+                        <div class="pass_bar_total">
+                            <div class="pass_bar_pass" style="width:$stat.passrate%;"></div>
+                        </div>
+                    </td>
+
+
+                    #if($haz)
+                        <td class="num">
+                            #if($covs.get($stat.projectCode))
+                                <a target="_blank" href="$covs.get($stat.projectCode).url">$covs.get($stat.projectCode).passrate%</a>
+
+                                <div class="pass_bar_total">
+                                    <div class="pass_bar_pass" style="width:$covs.get($stat.projectCode).passrate%;"></div>
+                                </div>
+                            #else
+                                N/A
+                            #end
+                        </td>
+                    #end
+
+                    <td class="normal" style="text-align: center;">$stat.dateCreated</td>
+                </tr>
+            #end
+
+            <tfoot>
+            <tr class="emphasis">
+                <td>Total</td>
+                <td class="num">$data.getTotal().totalCase</td>
+                <td class="num fail">$data.getTotal().failedCase</td>
+                <td class="num">
+                    $data.getTotal().passrate%
+                    <div class="pass_bar_total">
+                        <div class="pass_bar_pass" style="width:$data.getTotal().passrate%;"></div>
+                    </div>
+                </td>
+                #if($haz)
+                    <td class="num">
+                        $math.roundTo(1, $data.getTotalCoverage())%
+                        <div class="pass_bar_total">
+                            <div class="pass_bar_pass" style="width:$data.getTotalCoverage()%;"></div>
+                        </div>
+                    </td>
+                #end
+                <td></td>
+
+            </tr>
+            </tfoot>
+        </table>
+    #end
+</div>
+</body>
+</html>

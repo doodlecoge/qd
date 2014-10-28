@@ -1,0 +1,52 @@
+#* @vtlvariable name="data"     type="com.webex.qd.widget.TimsAutomationCaseStatsWidget.Data" *#
+<table id="tims_report" border="0" cellspacing="1" cellpadding="3" style="table-layout:fixed;width:100%" class="border-thin">
+    <thead>
+    <tr style="background-image:url(${base}/images/tims/gradient.gif);font-weight:bold">
+        <td class="border-thin"><img alt="" style="vertical-align:middle" src="${base}/images/tims/passed.gif">Automated</td>
+        <td class="border-thin"><img alt="" style="vertical-align:middle" src="${base}/images/tims/pending.gif">To-Be Automated</td>
+        <td class="border-thin"><img alt="" style="vertical-align:middle" src="${base}/images/tims/passex.gif">Not Automatable</td>
+        <td class="border-thin">Total</td>
+        <td class="border-thin">Automation Rate</td>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>
+            #if($data.automated >= 0)
+                <a href="http://tims.cisex.com/warp.cmd?ent=$data.config.automatedSearchId" target="_blank">$data.automated</a>
+            #else
+                #if($data.config.notAutomatedSearchId)
+                    <a href="http://tims.cisex.com/warp.cmd?ent=$data.config.automatedSearchId" target="_blank">-</a>
+                #else
+                    -
+                #end
+            #end
+        </td>
+        <td>
+            #if ($data.tobeAutomated >= 0)
+                <a href="http://tims.cisex.com/warp.cmd?ent=$data.config.tobeAutomatedSearchId" target="_blank">$data.tobeAutomated</a>
+            #else
+                #if($data.config.notAutomatedSearchId)
+                    <a href="http://tims.cisex.com/warp.cmd?ent=$data.config.tobeAutomatedSearchId" target="_blank">-</a>
+                #else
+                    -
+                #end
+            #end
+        </td>
+        <td>
+            #if ($data.notAutomated >= 0)
+                <a href="http://tims.cisex.com/warp.cmd?ent=$data.config.notAutomatedSearchId" target="_blank">$data.notAutomated</a>
+            #else
+                #if($data.config.notAutomatedSearchId)
+                    <a href="http://tims.cisex.com/warp.cmd?ent=$data.config.notAutomatedSearchId" target="_blank">-</a>
+                #else
+                    -
+                #end
+            #end
+        </td>
+        <td>$data.total</td>
+        <td>$data.automationRate</td>
+    </tr>
+    </tbody>
+</table>
+<img src="$base/widget/tims/chart?numbers=$!data.automated,$!data.tobeAutomated,$!data.notAutomated">

@@ -1,0 +1,182 @@
+#* @vtlvariable name="setting" type="com.webex.qd.widget.RallyDefectWidget.Configuration" *#
+
+<!DOCTYPE html>
+<html>
+<head>
+    <script type="text/javascript" src="${base}/script/jquery172.js"></script>
+    <script type="text/javascript" src="${base}/script/jquery.form.min.js"></script>
+    <script type="text/javascript" src="${base}/script/common.js"></script>
+
+    <link type="text/css" rel="stylesheet" href="${base}/css/common.css"/>
+    <link type="text/css" rel="stylesheet" href="${base}/css/setting.css"/>
+    <link type="text/css" rel="stylesheet" href="${base}/css/font-awesome.css"/>
+    <link type="text/css" rel="stylesheet" href="${base}/css/setting_common.css" />
+    <style type="text/css">
+        #rally_tbl input {
+            padding-left: 0;
+            padding-right: 0;
+            width: 100%;
+        }
+
+        #rally_tbl td {
+            padding: 0 10px 0 0;
+        }
+    </style>
+    <script type="text/javascript">
+        $(function() {
+            resize();
+            var tbl_rally = $("#rally_tbl");
+            tbl_rally.click(function(e) {
+                var el = $(e.target);
+                if(!el.hasClass('btn01')) return;
+                el.parent().parent().remove();
+            });
+            var addNewRow = function() {
+                var idx = tbl_rally.find('tr').length;
+                var tr = $('<tr></tr>');
+                var td, input;
+
+                td = $('<td></td>');
+                input = $('<input type="text" name="projects[' + idx + '].display_name" class="text ui-corner-all ui-widget-content"  />');
+                td.append(input);
+                tr.append(td);
+
+                td = $('<td></td>');
+                input = $('<input type="text" name="projects[' + idx + '].workspace_id" class="text ui-corner-all ui-widget-content"  />');
+                td.append(input);
+                tr.append(td);
+
+
+                td = $('<td></td>');
+                input = $('<input type="text" name="projects[' + idx + '].project_id" class="text ui-corner-all ui-widget-content"  />');
+                td.append(input);
+                tr.append(td);
+
+                td = $('<td></td>');
+                td.append('<a class="btn01" href="javascript:void(0);">Delete</a>');
+                tr.append(td);
+
+                $("#rally_tbl").find('tbody').append(tr);
+                resize();
+            };
+            if(tbl_rally.find("tbody tr").length == 0){
+                addNewRow();
+            }
+            $("#add_pc").click(addNewRow);
+        })
+    </script>
+</head>
+<body>
+<form id="jsonForm" action="save" method="post">
+    <ul class="setting">
+        <li>
+            <span>Widget Name:</span><br>
+            #if($name)
+                #set($n = $name)
+            #else
+                #set($n = "")
+            #end
+            <input type="text" name="name" value="$n" id="name"
+                   class="text ui-corner-all ui-widget-content"
+                    style="width: 90%;">
+        </li>
+
+##        <li>
+##            <span>Rally Login Key:</span>
+##
+##            #if($setting.login_key)
+##                #set($k = $setting.login_key)
+##            #else
+##                #set($k = "")
+##            #end
+##            <input type="text" value="$k" name="login_key"
+##                   class="text ui-corner-all ui-widget-content"
+##                   style="width: 90%;" />
+##
+##            <div class="tip" style="width: 90%;">
+##                Two options:
+##                <ol>
+##                    <li>
+##                        Leave this field blank if you have added
+##                        <a href="http://wwwin-tools.cisex.com/dir/details/huaiwang" target="_blank">Huaichao Wang</a>
+##                        as a viewer for each project you are adding;
+##                    </li>
+##                    <li>
+##                        Or,
+##                        <a href="https://rally1.rallydev.com/apps/html/EncoderPage.html" target="_blank">click here</a>
+##                        to generate login key using another read only account.
+##                    </li>
+##                </ol>
+##            </div>
+##        </li>
+
+        <li>
+            <div style="padding: 5px; background: #fd3; border-left: 5px solid #f88;">
+                Please add <a href="http://wwwin-tools.cisex.com/dir/details/huaiwang" target="_blank">Huaichao Wang (huaiwang)</a>
+                as viewer for each project you are adding, otherwise we will have no permission to show
+                those data for you.
+            </div>
+        </li>
+
+        <li>
+            <span>Rally Projects:</span>
+
+            <table id="rally_tbl" style="width: 100%;">
+                <colgroup>
+                    <col />
+                    <col />
+                    <col />
+                    <col style="width: 15%"/>
+                </colgroup>
+                <thead>
+                <tr>
+                    <td>Display Name: </td>
+                    <td>Workspace ID:</td>
+                    <td>Project ID:</td>
+                    <td></td>
+                </tr>
+                </thead>
+                <tbody>
+                    #foreach($project in $setting.projects)
+                    <tr>
+                        <td>
+                            <input type="text"
+                                   value="$!project.display_name"
+                                   name="projects[$foreach.index].display_name"
+                                   class="text ui-corner-all ui-widget-content" />
+                        </td>
+
+                        <td>
+                            <input type="text"
+                                   value="$!project.workspace_id"
+                                   name="projects[$foreach.index].workspace_id"
+                                   class="text ui-corner-all ui-widget-content" />
+                        </td>
+
+                        <td>
+                            <input type="text"
+                                   value="$!project.project_id"
+                                   name="projects[$foreach.index].project_id"
+                                   class="text ui-corner-all ui-widget-content" />
+                        </td>
+
+                        <td>
+                            <a class="btn01" href="javascript:void(0);">Delete</a>
+                        </td>
+                    </tr>
+                    #end
+                </tbody>
+            </table>
+
+            <div align='right' style="height: 35px;margin-top: 10px">
+            <a class="btn01" id="add_pc" href="javascript:void(0)">
+                Add More ...
+            </a>
+            </div>
+        </li>
+    </ul>
+</form>
+
+<a target="_blank" href="$base/help/rally/index.html" class="setting-help"></a>
+</body>
+</html>

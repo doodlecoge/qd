@@ -1,0 +1,920 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<link type="text/css" rel="stylesheet" href="${base}/css/common.css"/>
+<link type="text/css" rel="stylesheet" href="${base}/css/jquery.plugins.css"/>
+<link type="text/css" rel="stylesheet" href="${base}/css/jquery-ui-1.8.22.custom.css"/>
+<link type="text/css" rel="stylesheet" href="${base}/css/font-awesome.css"/>
+<style type="text/css">
+    #updated_on {
+
+        font-family: Arial;
+        font-size: 12px;
+        color: #666;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+        padding-top: 5px;
+    }
+
+    #updated_on .success {
+        color: darkgreen;
+        font-weight: bold;
+    }
+
+    #updated_on .error {
+        color: #f66;
+        font-weight: bold;
+    }
+
+    table td {
+        text-align: center;
+    }
+
+    .tbl .selcol {
+        background: #fc9;
+    }
+
+    #projects {
+        padding: 0 0 5px 0;
+    }
+
+    #projects a {
+        cursor: pointer;
+        display: -moz-inline-stack;
+        display: inline-block;
+        *display: inline;
+        zoom: 1;
+
+        font-family: Arial, serif;
+        font-weight: bold;
+        font-size: 12px;
+        padding: 2px 8px;
+        border: 1px solid #ccc;
+        text-decoration: none;
+        color: #333;
+
+        background: #eee;
+        background: -webkit-gradient(linear, left top, left bottom, from(white), to(#E7E7E7));
+        background: -moz-linear-gradient(top, white, #E7E7E7);
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#FFFFFF', endColorstr='#E7E7E7');
+    }
+
+    #projects a:hover {
+        color: #efefef;
+
+        border: 1px solid #58a;
+        background: #5ad;
+        background: -webkit-gradient(linear, left top, left bottom, from(#7be), to(#5ad));
+        background: -moz-linear-gradient(top, #7be, #5ae);
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#77bbee', endColorstr='#55aadd');
+
+    }
+
+    #projects a.sel {
+        color: #333;
+
+        border: 1px solid #cc9933;
+        background: #cc9933;
+        background: -webkit-gradient(linear, left top, left bottom, from(#ffcc66), to(#cc9933));
+        background: -moz-linear-gradient(top, #ffcc66, #cc9933);
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffcc66', endColorstr='#cc9933');
+
+    }
+
+    #projects .left {
+        -webkit-border-radius: 5px 0 0 5px;
+        -moz-border-radius: 5px 0 0 5px;
+        border-radius: 5px 0 0 5px;
+    }
+
+    #projects .right {
+        -webkit-border-radius: 0 5px 5px 0;
+        -moz-border-radius: 0 5px 5px 0;
+        border-radius: 0 5px 5px 0;
+    }
+
+    #projects .left_right {
+        -webkit-border-radius: 5px;
+        -moz-border-radius: 5px;
+        border-radius: 5px;
+    }
+
+    #projects .input {
+        min-width: 35%;
+        background: white url(${base}/images/search.png) no-repeat right;
+    }
+
+    #projects button {
+        width: 35%;
+    }
+</style>
+<script src="${base}/script/jquery172.js" type="text/javascript"></script>
+<script src="${base}/script/common.js" type="text/javascript"></script>
+<script src="${base}/script/highcharts.js" type="text/javascript"></script>
+<script src="${base}/script/cdets/table.qd.js" type="text/javascript"></script>
+<script type="text/javascript" src="${base}/script/cdets/jquery.tableFilter.js"></script>
+<script type="text/javascript" src="${base}/script/cdets/jquery-ui.js"></script>
+<script type="text/javascript" src="${base}/script/cdets/jqueryui.qd.plugins.js"></script>
+<script type="text/javascript">
+var StatusRes = 'A-Assigned,C-Closed,D-Duplicate,F-Forwarded,H-Held,I-Info_req,J-Junked,M-More,N-New,O-Opened,P-Postponed,R-Resolved,S-Submitted,U-Unreproducible,V-Verified,W-Wait'.split(',');
+var SeverityRes = {
+    1: "Catastrophic",
+    2: "Severe",
+    3: "Moderate",
+    4: "Minor",
+    5: "Cosmetic",
+    6: "Enhancement"
+};
+//*********************************search
+function isAjaxSearchAble(t) {
+    return t == 'Component' || t == 'Submitter' || t == 'de_manager' || t == 'Engineer';
+}
+function getCallBackFunc(t) {
+    if (isAjaxSearchAble(t)) {
+        return function (val) {
+            var q = '(' + Data[0].query + ') AND ([' + CdetsField + "] = '" + val + "')";
+            window.open('https://cdetsng.cisex.com/webui/#query=' + q, '_blank');
+        }
+    } else {
+        return null;
+    }
+}
+function createSearch() {
+    var c = $("#content").find(">div:first");
+    var search = $('<input id="searchInput" type="text">').addClass("input");
+    c.append(search);
+}
+function attachAjaxSearch(data, func) {
+    var sum = 0;
+    $(data).each(function (index, element) {
+        sum += 1;
+    });
+    $('#content').find('>div:first>input').attachAutoComplement(data, func, 'Search Here( ' + sum + ' results )');
+}
+function removeAjaxSearch() {
+    $('#searchInput').remove();
+}
+//*********************************end search
+//********************************table data
+function isTableEnable(type) {
+    return type == 'Submitter' || type == 'de_manager' || type == 'Engineer' || type == 'Component';
+}
+var createTableFuncMap = {
+    "Submitter": attachAdvancedTable,
+    "de_manager": attachAdvancedTable,
+    "Engineer": attachAdvancedTable,
+    "Component": attachNormalTable,
+    "Found": attachNormalTable
+}
+function toObjectList(twoDimensionArray, keys) {
+    var dataList = [];
+    $.each(twoDimensionArray, function (i, ele) {
+        var tmp = {};
+        $.each(keys, function (j, key) {
+            tmp[key] = ele[j];
+        });
+        dataList.push(tmp);
+    });
+    return dataList;
+}
+function createViewTab() {
+    $("#projects").append($("<button id='btnTab'></button>").html('Table View').addClass('table_view'));
+    $("#btnTab").bind('click', function () {
+        var isTableView = $(this).hasClass('table_view');
+        if (isTableView) {
+            $("#chartView").hide();
+            $('#tableView').show();
+            $(this).removeClass('table_view').addClass('chart_view').html('PieChart View');
+            resize();
+        } else {
+            $("#chartView").show();
+            $('#tableView').hide();
+            $(this).addClass('table_view').removeClass('chart_view').html('Table View');
+            resize();
+        }
+    })
+}
+function removeViewTab() {
+    $("#btnTab").remove();
+}
+function attachNormalTable(parent, type, idx, data) {
+    var c = $("<div id='tableView'></div>");
+    var tbl = $('<table class="tbl"></table>');
+    c.append(tbl);
+    c.hide();
+    $(parent).append(c);
+    var dataList = toObjectList(data, ["name", "value"]);
+    var funVal = function () {
+        var q = '(' + Data[0].query + ') AND ([' + CdetsField + "] = '{name}')";
+        q = 'https://cdetsng.cisex.com/webui/#query=' + q;
+        return "<td><a href=\"" + q + "\" target='_blank'>{value}</a></td>";
+    };
+    tbl.renderTable(dataList, ["name", "value"], [function () {
+        return "<td>{name}</td>"
+    }, funVal]);
+    tbl.renderTableHeader(["Component", "Defects"]);
+    tbl.renderTableFooter(dataList, ["value"], [function () {
+        return "<td>Total</td>"
+    }, function () {
+        return "<td>{value}</td>"
+    }]);
+    createViewTab();
+}
+function attachAdvancedTable(parent, type, idx) {
+//    $("#projects").append($("<img id='loading_table'>").attr('src','/qd/images/loading.gif'));
+    var c = $("<div id='tableView'></div>")
+    var tbl = $('<table class="tbl"></table>');
+    c.append(tbl);
+    $(parent).append(c);
+    c.hide();
+    c.append($("<img id='loading_table'>").attr('src', '/qd/images/loading.gif'));
+    createViewTab();
+    var xhr = $.ajax({
+        url: '../cdets/by/advanced',
+        dataType: 'json',
+        data: {
+            widgetId: $widget.id,
+            idx: idx,
+            field: type
+        }
+    });
+
+    var fucCec = function () {
+        return "<td><a fullname='{cec_info.prettyName}' target='_blank' href='{cec_info.detailUrl}')'>{cec_info.prettyName}</a></td>"
+    };
+    var funVal = function () {
+        var q = '(' + Data[0].query + ') AND ([' + CdetsField + "] = '{cec_info.uid}')";
+        q = 'https://cdetsng.cisex.com/webui/#query=' + q;
+        return "<td><a href=\"" + q + "\" target='_blank'>{value}</a></td>";
+    };
+    var funCity = function () {
+        return "<td>{cec_info.city}</td>";
+    };
+    var funManager = function () {
+        return "<td>{cec_info.manager}</td>"
+    };
+    var no_display = function () {
+        return "<th>-</th>";
+    };
+
+    xhr.done(function (data) {
+        tbl.renderTable(data, ["cec_info", "value"], [fucCec, funCity, funManager, funVal]);
+        tbl.renderTableHeader(["Name", "City", "Manager", "Defects"]);
+        tbl.renderTableFooter(data, ["value"], [function () {
+            return "<th>Total</th>"
+        }, no_display, no_display, function () {
+            return "<th>{value}</th>"
+        }]);
+        // support sort as number
+        // can not be filter
+        tbl.find("thead th:last").addClass("ui-tableFilter-number")
+                .addClass("ui-tableFilter-inner").addClass("ui-tableFilter-no-filter");
+        // support sort in a
+        tbl.find("thead th:first").addClass("ui-tableFilter-innerAttr")
+                .attr("sort_attr_name", "fullname").addClass("ui-tableFilter-no-filter");
+        // update total when filter is done
+
+        tbl.tableFilter({dialog: {modal: false}}, function (table, rows) {
+            var sum = 0;
+            $.each(rows, function (i, ele) {
+                sum += Number($(ele).find("td:last a").html());
+            });
+            table.find("tfoot th:last").html(sum);
+            resize();
+        });
+//        $("#loading_table").remove();
+        $("#loading_table").remove();
+        resize();
+    });
+    xhr.fail(function (data) {
+        resize();
+    });
+
+}
+//********************************end table data
+function getStatusFullName(key) {
+    var fname = null;
+    $.each(StatusRes, function (i, fullName) {
+        if (key[0] == fullName[0]) {
+            fname = fullName.substr(2);
+            return false;
+        }
+    });
+    return fname;
+}
+
+
+function getMetadata(data) {
+    var haSev = new HashArray2();
+    var haSta = new HashArray2();
+
+    $.each(data, function (i, single) {
+        $.each(single.data, function (key, val) {
+            var ss = key.split(',');
+
+            if (ss.length != 2) return;
+
+            var severity = ss[0];
+            var status = ss[1];
+
+            severity = $.trim(severity);
+            status = $.trim(status);
+
+            haSev.add(severity);
+            haSta.add(status);
+        });
+    });
+
+    return [haSev.data(), haSta.data()];
+}
+
+function getStatus(query) {
+    var ret;
+    try {
+        var reg = /\[?Status\]?\s*=\s*'(\w)'/ig;
+        ret = [];
+        while (m = reg.exec(query)) {
+            ret.push(m[1]);
+        }
+    } catch (e) {
+        ret = null;
+    }
+    return ret;
+
+}
+
+function showSingleQuery(data, type) {
+    if ($("#projects").length == 0) {
+        $("#content").html('');
+        addSingleMenuBar();
+    }
+
+    var idx = 0;
+    name = data[idx].name;
+
+    if ('tab' == type) {
+        showSingleQueryInTable(data, idx);
+    } else {
+        showSingleQueryBy(type, idx, name);
+    }
+}
+
+
+var CdetsField = null;
+
+function addSingleMenuBar() {
+    var div = $('<div id="projects"></div>');
+    div.append('<a class="left sel" t="tab">Table</a>');
+    div.append('<a t="Component">Component</a>');
+    div.append('<a t="Submitter">Submitter</a>');
+    div.append('<a t="de_manager">DE-manager</a>');
+    div.append('<a t="Engineer">Engineer</a>');
+    div.append('<a t="Found">Found</a>');
+    div.append('<a class="right" t="Status">Status</a>');
+
+    $("#content").append(div);
+
+    div.click(function (e) {
+        if (!$(e.target).is('a')) {
+            return false;
+        }
+        div.find('a').removeClass('sel');
+        var el = $(e.target);
+        var t = el.attr('t');
+        if (!t) return;
+        CdetsField = el.html();
+        removeAjaxSearch();
+        removeViewTab();
+        showSingleQuery(Data, t);
+        el.addClass('sel');
+        resize();
+    });
+}
+
+
+function showSingleQueryBy(type, idx, name) {
+    var c = $("#content").children('div');
+
+    if (c.length == 2) {
+        $("#content").children('div:last')
+                .html('<img src="${base}/images/loading.gif" alt=""/>');
+    }
+
+    var xhr = $.ajax({
+        url: '../cdets/by',
+        dataType: 'text',
+        data: {
+            widgetId: $widget.id,
+            idx: idx,
+            field: type
+        }
+    });
+    isAjaxSearchAble(type) && createSearch();
+    xhr.done(function (data) {
+        data = eval('(' + data + ')');
+
+        if (data.error) {
+            // todo: add error handler
+        } else {
+            var arr = [];
+
+            $.each(data.data, function (key, val) {
+                arr.push([key, val]);
+            });
+
+            sort(arr, function (a, b) {
+                return a[1] > b[1] ? 1 : a[1] == b[1] ? 0 : -1;
+            }, -1);
+            isAjaxSearchAble(type) && attachAjaxSearch(arr, getCallBackFunc(type));
+            showPieChart(arr, name, type, idx);
+
+        }
+        resize();
+    });
+    xhr.fail(function (data) {
+        resize();
+    });
+}
+
+function loadingFailed() {
+    var c = $("#content").children('div');
+    if (c.length == 2) {
+        $("#content").children('div:last').remove();
+    }
+
+    c = $('<div style="text-align: center">Loading Failed!</div>');
+    c.html('');
+    $("#content").append(c);
+}
+
+function showPieChart(data, name, type, idx) {
+    var content = $("#content").children('div');
+    if (content.length == 2) {
+        $("#content").children('div:last').remove();
+    }
+
+    var parent = $('<div id="parentView"></div>');
+    var chartContent = $('<div id="chartView"></div>');
+    chartContent.html('');
+//    $("#content").append(parent);
+    parent.insertAfter($("#projects"));
+    parent.append(chartContent)
+    chartContent.highcharts({
+        chart: {
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false
+        },
+        title: {
+            text: null
+        },
+//        subtitle: {
+//            text: 'Total '+ CdetsField +':'+sum,
+//            align: 'left'
+//        },
+        tooltip: {
+            pointFormat: '' +
+                    'Defects: <b>{point.y}</b>' +
+                    '<br/>' +
+                    'Percent: <b>{point.percentage:.1f}%</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: true,
+                    color: '#000000',
+                    connectorColor: '#000000',
+                    format: '<b>{point.name}</b>'
+                },
+                events: {
+                    click: function (e) {
+//                       console.log(Data[0].query);
+                        var q = '(' + Data[0].query + ') AND ([' + CdetsField + "] = '" + e.point.name + "')";
+                        window.open('https://cdetsng.cisex.com/webui/#query=' + q, '_blank');
+                    }
+                }
+            }
+        },
+        series: [
+            {
+                type: 'pie',
+                name: 'Defects',
+                data: data
+            }
+        ]
+    });
+    var tableFunc = createTableFuncMap[type];
+    if (tableFunc) {
+        tableFunc(parent, type, idx, data);
+    }
+}
+
+function showSingleQueryInTable(data, idx) {
+    var metaData = getMetadata(data);
+    var single = data[idx];
+
+    var severity = metaData[0];
+
+    var ha = new HashArray();
+    ha.add(1);
+    ha.add(2);
+    ha.add(3);
+    $.each(severity, function (i, v) {
+        ha.add(v);
+    });
+    severity = ha.data();
+
+//    var status = metaData[1];
+    var status = getStatus(data[0].query);
+    if (status == null || status.length == 0) status = metaData[1];
+
+    heapSort(status);
+    heapSort(severity);
+
+    var tbl = $('<table class="tbl"></table>');
+
+    var colgrp = $('<colgroup></colgroup>');
+    tbl.append(colgrp);
+
+    var len = status.length;
+    for (var i = 0; i < len + 2; i++) {
+        colgrp.append('<col />');
+    }
+    colgrp.find('col:first')
+            .css('text-align', 'left')
+            .css('width', '120px');
+
+
+    var thead = $('<thead></thead>');
+    tbl.append(thead);
+
+    var tr;
+    var td;
+
+
+    tr = $('<tr></tr>');
+    thead.append(tr);
+
+    td = $('<th style="text-align: left">Severity</th>');
+    tr.append(td);
+
+    $.each(status, function (i, val) {
+        td = $('<th title="' + getStatusFullName(val) + '">' + val + '</th>');
+        tr.append(td);
+    });
+
+    tr.append('<th>Total</th>');
+
+
+    /**************************************************/
+    var tbody = $('<tbody></tbody>');
+    tbl.append(tbody);
+
+
+    $.each(severity, function (i, sev) {
+
+        tr = $('<tr></tr>');
+        tbody.append(tr);
+        tr.append('<td style="text-align: left;">' + sev + "-" + SeverityRes[sev] + '</td>');
+
+        var total = 0;
+        $.each(status, function (j, sta) {
+            var cnt = single.data[sev + ',' + sta];
+            if (!cnt) {
+                tr.append('<td>0</td>');
+            } else {
+                total += parseInt(cnt);
+                var a = $("<a target='_blank' href=\"https://cdetsng.cisex.com/webui/#query=" + single.query + " AND [Status]='" + sta + "' AND [Severity]='" + sev + "'\">" + cnt + "</a>");
+                td = $('<td></td>');
+                td.append(a);
+                tr.append(td);
+            }
+        });
+        var a = $("<a target='_blank' href=\"https://cdetsng.cisex.com/webui/#query=" + single.query + " AND [Severity]='" + sev + "'\">" + total + "</a>");
+        td = $('<td style="font-weight: bold;"></td>');
+        td.append(a);
+        tr.append(td);
+    });
+
+
+    /**************************************************/
+    /* foot line */
+    var tfoot = $('<tfoot></tfoot>');
+    tbl.append(tfoot);
+
+    tr = $('<tr></tr>');
+    tfoot.append(tr);
+
+    tr.append('<td style="text-align: left">Total</td>');
+
+    var totalTotal = 0;
+    $.each(status, function (i, sta) {
+        var total = 0;
+        $.each(severity, function (j, sev) {
+            var cnt = single.data[sev + ',' + sta];
+            if (!!cnt) total += parseInt(cnt);
+        });
+        var a = $("<a target='_blank' href=\"https://cdetsng.cisex.com/webui/#query=" + single.query + " AND [Status]='" + sta + "'\">" + total + "</a>");
+        td = $('<td></td>');
+        td.append(a);
+        tr.append(td);
+        totalTotal += total;
+    });
+
+
+    tr.append('<td><a target="_blank" href="https://cdetsng.cisex.com/webui/#query=' + single.query + '">' + totalTotal + '</a></td>');
+
+    var c = $("#content").children('div');
+
+    if (c.length == 2) {
+        $("#content").children('div:last').remove();
+    }
+
+    c = $('<div></div>');
+    c.html('');
+    c.append(tbl);
+    $("#content").append(c);
+}
+
+
+function showMultipleQuery(data) {
+    var status = getMetadata(data)[1];
+    heapSort(status);
+
+    var tbl = $('<table class="tbl"></table>');
+
+    var colgrp = $('<colgroup></colgroup>');
+    tbl.append(colgrp);
+
+    var len = status.length;
+    for (var i = 0; i < len + 2; i++) {
+        colgrp.append('<col />');
+    }
+    colgrp.find('col:first')
+            .css('text-align', 'left')
+            .css('width', '120px');
+
+    var thead = $('<thead></thead>');
+    tbl.append(thead);
+
+    var tr = $('<tr></tr>');
+    thead.append(tr);
+
+    var td = $('<th>Display Name</th>');
+    tr.append(td);
+
+    $.each(status, function (i, val) {
+        td = $('<th title="' + getStatusFullName(val) + '">' + val + '</th>');
+        tr.append(td);
+    });
+
+    tr.append('<th>Total</th>');
+
+    var tbody = $('<tbody></tbody>');
+    tbl.append(tbody);
+
+    $.each(data, function (i, single) {
+        tr = $('<tr></tr>');
+        tbl.append(tr);
+        if (!!single.url) {
+            var a = $('<a target="_blank" href="' + single.url + '">' + single.name + '</a>')
+            td = $('<td style="text-align: left;"></td>').append(a);
+            tr.append(td)
+        } else tr.append('<td style="text-align: left;">' + single.name + '</td>');
+
+        var sArr = {};
+
+        $.each(single.data, function (key, val) {
+            var ss = key.split(',');
+
+            if (ss.length != 2) return;
+
+            var severity = ss[0];
+            var status = ss[1];
+
+            severity = $.trim(severity);
+            status = $.trim(status);
+
+            if (typeof sArr[status] != "number") sArr[status] = 0;
+
+            sArr[status] += parseInt(val);
+        });
+
+
+        var total = 0;
+
+        $.each(status, function (i, sta) {
+            if (!!sArr[sta]) {
+                var a = $("<a target='_blank' href=\"https://cdetsng.cisex.com/webui/#query=" + single.query + " AND [Status]='" + sta + "'\"></a>");
+                a.append(sArr[sta]);
+                total += parseInt(sArr[sta]);
+                td = $('<td></td>');
+                td.append(a);
+                tr.append(td);
+            } else tr.append('<td>-</td>');
+        });
+
+        var a = $("<a target='_blank' href=\"https://cdetsng.cisex.com/webui/#query=" + single.query + "\">" + total + "</a>");
+        var td = $('<td></td>');
+        td.append(a);
+        tr.append(td);
+    });
+
+
+    /*********** foot line ***********/
+    var tfoot = $('<tfoot></tfoot>');
+    tbl.append(tfoot);
+
+    tr = $('<tr></tr>');
+    tfoot.append(tr);
+    tr.append('<td style="text-align: left;">Total</td>');
+
+    var vTotals = getVerticalTotals(status, data);
+
+    var total = 0;
+    $.each(vTotals, function (i, val) {
+        total += val;
+        tr.append('<td><a target="_blank" href="https://cdetsng.cisex.com/webui/#query=' + buildMultiQueryUrl(data, status[i]) + '">' + val + '</a></td>');
+    });
+
+
+    tr.append('<td><a target="_blank" href="https://cdetsng.cisex.com/webui/#query=' + buildMultiQueryUrl(data) + '">' + total + '</a></td>');
+
+
+    $("#content").html('');
+    $("#content").append(tbl);
+
+    resize();
+}
+
+
+function buildMultiQueryUrl(data, sta) {
+    var query = [];
+
+    $.each(data, function (i, single) {
+        if (i != 0) query.push(" OR ");
+
+        query.push("(");
+        query.push(single.query);
+        if (!!sta) {
+            query.push(" AND [Status]='");
+            query.push(sta);
+            query.push("'")
+        }
+        query.push(")");
+    });
+
+    return query.join("");
+}
+
+
+function getVerticalTotals(status, data) {
+    var arr = [];
+    $.each(status, function (i, sta) {
+        var total = 0;
+        $.each(data, function (i, single) {
+            $.each(single.data, function (key, val) {
+                if (key.split(',')[1] == sta) total += parseInt(val);
+            });
+        });
+        arr.push(total);
+    });
+    return arr;
+}
+
+function readableTime(ms) {
+    var mins = parseInt(ms / 1000 / 60);
+    if (mins < 1) return 'just now';
+    else if (mins < 60) return mins + 'm ago';
+    else {
+        var m = mins % 60;
+        var h = parseInt(mins / 60);
+        return h + 'h and ' + m + 'm ago';
+    }
+}
+
+function ref() {
+    var xhr = $.ajax({
+        url: "${base}/widget/cdets/cdets_ref",
+        cache: false,
+        data: {wid: $widget.id},
+        dataType: "text",
+    });
+
+    xhr.done(function (data) {
+        var item = $("#updated_on").find('i');
+        try {
+            var d = eval('(' + data + ')');
+            if (d.error) {
+                item.html('Update Failed!')
+                        .addClass('error').removeClass('icon-refresh');
+            } else {
+                item.html('Update Success!.')
+                        .addClass('success').removeClass('icon-refresh');
+            }
+        } catch (e) {
+            item.html('Update Failed!')
+                    .addClass('error').removeClass('icon-refresh');
+        }
+
+        setTimeout((function (it) {
+            return function () {
+                it.removeClass('error').removeClass('success')
+                        .addClass('icon-refresh').html('');
+            }
+        })(item), 2000);
+    });
+
+    xhr.fail(function (data) {
+        var item = $("#updated_on").find('i');
+        item.html('Update Failed!').addClass('error').removeClass('icon-refresh');
+        setTimeout((function (it) {
+            return function () {
+                it.removeClass('error').removeClass('success')
+                        .addClass('icon-refresh').html('');
+            }
+        })(item), 2000);
+    });
+}
+
+function showUpdatedTime() {
+    var xhr = $.ajax({
+        url: "${base}/widget/cdets/cdets_updated_time",
+        cache: false,
+        data: {wid: $widget.id},
+        dataType: "json",
+    });
+
+    xhr.done(function (data) {
+        var str = readableTime(parseInt(data));
+        $("#content").append(
+                '<span id="updated_on">Updated: ' + str +
+                        '&nbsp;<i class="icon-refresh" title="click to refresh!" onclick="return ref()"></i></span>'
+        );
+
+        resize();
+    });
+
+    xhr.fail(function (data) {
+
+    });
+}
+
+var Data = null;
+
+$(function () {
+    var xhr = $.ajax({
+        url: "${base}/widget/cdets/cdets_data_provider",
+        cache: false,
+        data: {widgetId: $widget.id},
+        dataType: "json",
+    });
+
+    xhr.done(function (data) {
+        Data = data;
+//        console.log(data);
+        var len = data.length;
+
+        if (len == 0) {
+            var loc = location.href + '?t=' + (new Date() - 0);
+            $("#content").html('Loading failed! <a href="' + loc + '">Reload</a>');
+        } else if (len == 1) {
+            showSingleQuery(data, 'tab');
+        } else {
+            showMultipleQuery(data);
+        }
+
+        showUpdatedTime();
+
+        var status = getMetadata(data)[1];
+        heapSort(status);
+        resize();
+    });
+
+    xhr.fail(function () {
+        var loc = location.href + '?t=' + (new Date() - 0);
+        $("#content").html('Loading failed! <a href="' + loc + '">Reload</a>');
+    });
+
+
+});
+</script>
+</head>
+<body style="padding: 0; margin: 0;">
+    #if($setting.criterias.size() == 0)
+    <div style="height: 100px; line-height: 100px; text-align: center;">
+        Please Edit Widget Settings First.
+    </div>
+    #else
+    <div>
+        <div id="content" style="text-align: center;">
+            <img src="${base}/images/loading.gif" alt=""/>
+        </div>
+    </div>
+    #end
+</body>
+</html>

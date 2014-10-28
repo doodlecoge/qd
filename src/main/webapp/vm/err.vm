@@ -1,0 +1,21 @@
+<link rel="stylesheet" type="text/css" href="$ctx/css/font-awesome.css"/>
+
+<style type="text/css">
+    .error {
+        color: #f33;
+        font-size: 24px;
+        font-weight: bold;
+    }
+</style>
+
+<div style="line-height: 30px; text-align: center;">
+    <span class="error">Loading Failed</span>
+    <hr/>
+    <a href="$url" class="icon-rotate-right" style="color: #006400; font-size: 24px;">&nbsp;reload</a>
+</div>
+
+<div style="display: none;">
+    $error
+    <hr/>
+    $e
+</div>

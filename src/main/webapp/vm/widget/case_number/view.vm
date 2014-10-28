@@ -1,0 +1,257 @@
+#* @vtlvariable name="setting" type="com.webex.qd.widget.CaseNumberWidget.Configuration" *#
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<link type="text/css" rel="stylesheet" href="${base}/css/common.css"/>
+<script src="${base}/script/jquery172.js" type="text/javascript"></script>
+<script src="${base}/script/common.js" type="text/javascript"></script>
+<script src="${base}/script/highcharts.js" type="text/javascript"></script>
+
+
+<style type="text/css">
+    .tbl {
+        width: 100%;
+        table-layout: fixed;
+        font-family: Arial;
+    }
+
+    .tbl td {
+        font-size: 10px;
+        text-align: center;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        height: 20px;
+        background: #ddd;
+        cursor: pointer;
+        border: 1px solid #A1A1A1;
+    }
+
+    .tbl td.sel {
+        background: #4B9FD5;
+        color: #fff;
+        font-weight: bold;
+        font-size: 11px;
+        border: none;
+    }
+</style>
+
+<script type="text/javascript">
+
+    function clone(statNode) {
+        var newNode = {};
+        newNode["date"] = statNode["date"];
+        newNode["passed"] = statNode["passed"];
+        newNode["failed"] = statNode["failed"];
+        newNode["bn"] = statNode["bn"];
+        return newNode;
+    }
+
+    function toFailDataArray(sourceArray) {
+        var result = [];
+        $.each(sourceArray, function(index, value) {
+            var newValue = clone(value);
+            newValue["y"] = value["failed"]
+            result.push(newValue)
+        });
+        return result;
+    }
+
+    function toPassDataArray(sourceArray) {
+        var result = [];
+        $.each(sourceArray, function(index, value) {
+            var newValue = clone(value);
+            newValue["y"] = value["passed"]
+            result.push(newValue)
+        });
+        return result;
+    }
+
+    function getCategoryArray(sourceArray) {
+        var result = [];
+        $.each(sourceArray, function(index, value) {
+            result.push(value["date"]);
+        });
+        return result;
+    }
+
+    function showChart(data, title) {
+        $('#svg_container').highcharts({
+            colors: [
+                '#9c0',
+                '#f66'
+            ],
+            chart: {
+                type: 'area',
+                height: 250
+            },
+            title: {
+                text: title
+            },
+            xAxis: {
+                categories: getCategoryArray(data).reverse(),
+                tickmarkPlacement: 'on',
+                title: {
+                    enabled: false
+                },
+                labels: {
+                    step: 5
+                }
+            },
+            yAxis: {
+                title: {
+                    text: 'Case Number'
+                },
+                labels: {
+                    formatter: function () {
+                        return this.value;
+                    }
+                }
+            },
+            tooltip: {
+                shared: true,
+                useHTML: true,
+                formatter: function() {
+                    var s = '<small>'+ this.x +'</small><table>';
+
+                    var bn = "";
+                    $.each(this.points, function(i, point) {
+                        s += '<tr><td style="color: ' + point.series.color + '">'+ point.series.name +': </td>'+
+                                '<td style="text-align: right"><b>' + point.y +'</b></td></tr>';
+                        bn = point.point.bn;
+                    });
+                    s += '<tr><td>Build Number: </td><td style="text-align: right">' + bn + '</td></tr>';
+                    s+= '</table>';
+
+                    return s;
+
+                },
+                valueDecimals: 2
+            },
+            plotOptions: {
+                area: {
+                    stacking: 'normal',
+                    lineColor: '#666666',
+                    lineWidth: 1,
+                    marker: {
+                        lineWidth: 1,
+                        lineColor: '#666666'
+                    },
+                    cursor: "pointer"
+                }
+            },
+            series: [
+                {
+                    name: 'Passed Cases',
+                    data: toPassDataArray(data).reverse(),
+                    events: {
+                        click: function (event) {
+//                            alert(event.point.bn);
+                        }
+                    }
+                },
+                {
+                    name: 'Failed Cases',
+                    data: toFailDataArray(data).reverse(),
+                    events: {
+                        click: function (event) {
+//                            alert(event.point.bn);
+                        }
+                    }
+                }
+            ]
+        });
+    }
+
+    function showLabels() {
+        var cont = $('#labels');
+
+        var tbl = $('<table class="tbl"></table>');
+        var tr = $('<tr></tr>');
+        var td = $('<td style="font-weight: bold;">TOTAL</td>');
+        tr.append(td);
+        tbl.append(tr);
+
+        var i = 1;
+        var sz = caseData["PROJECT_CODES"].length + 1;
+        var cols = Math.round($(document).width() / 100);
+
+        if (cols > sz) cols = sz;
+        else if (cols < sz) {
+            var lines = Math.ceil(sz / cols);
+            cols = Math.ceil(sz / lines);
+        }
+
+        $.each(caseData["PROJECT_CODES"], function (index, projectCode) {
+            if (i++ % cols == 0) {
+                tr = $('<tr></tr>');
+                tbl.append(tr);
+            }
+            td = $('<td>' + projectCode + '</td>');
+            tr.append(td);
+        });
+
+        if (i % cols != 0) {
+            tr.append($('<td style="cursor: default;" colspan="' + (cols - i % cols) + '"></td>'))
+        }
+
+        cont.append(tbl);
+
+
+        tbl.click(function (e) {
+            if (e.target.nodeName.toLowerCase() != 'td') return;
+            var el = $(e.target);
+
+            var tds = tbl.find('td');
+            var idx = el.index(tds);
+
+            if (el.html() != '') {
+                tds.removeClass('sel');
+                el.addClass('sel');
+            }
+
+            if (idx == 0)
+                showChart(caseData["TOTAL"], "Total Case Number Trend");
+            else if (el.html() != '') {
+                var projectCode = el.html();
+                showChart(caseData['DETAILS'][projectCode], projectCode);
+            }
+        });
+        tbl.find("td:first").click();
+    }
+
+    var caseData = {};
+
+    $(function () {
+        $.get("${base}/widget/casenumber/data_provider/$widget.id", function (data) {
+            $("#loading").hide();
+            caseData = data;
+            showLabels();
+            resize();
+        }, "json")
+                .fail(function () {
+
+                });
+        resize();
+    });
+</script>
+</head>
+<body style="padding: 0; margin: 0;">
+<div>
+    #if($setting.project_codes.size() <= 0)
+        <div style="height: 100px; line-height: 100px; text-align: center;">
+            Please Edit Your Project View.
+        </div>
+    #else
+        <div id="loading" style="height: 150px; line-height: 150px; text-align: center;">
+            <img src="${base}/images/loading.gif" alt="" />
+        </div>
+        <div id="svg_container" style="width: 100%; clear: both" align="center">
+        </div>
+        <div id="labels"></div>
+    #end
+</div>
+</body>
+</html>

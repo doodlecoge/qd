@@ -1,0 +1,425 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<head>
+<link type="text/css" rel="stylesheet" href="${base}/css/common.css"/>
+<link type="text/css" rel="stylesheet" href="${base}/css/jquery.plugins.css"/>
+<link type="text/css" rel="stylesheet" href="${base}/css/font-awesome.css"/>
+
+    #if($setting.useSpecifiedLoginKey())
+    <script a="b" type="text/javascript"
+            src="https://rally1.rallydev.com/apps/1.32/sdk.js?showHeader=false&loginKey=$setting.login_key"></script>
+    #else
+    <script type="text/javascript"
+            src="https://rally1.rallydev.com/apps/1.32/sdk.js?showHeader=false&loginKey=$RallyHuaiChaoLoginKey"></script>
+    #end
+
+<script src="${base}/script/jquery172.js" type="text/javascript"></script>
+
+<script src="${base}/script/common.js" type="text/javascript"></script>
+<script src="${base}/script/jquery.plugins.js" type="text/javascript"></script>
+<style type="text/css">
+    .tbl input[type="text"] {
+        padding: 0;
+        margin: 0;
+        border: 0;
+        outline: none;
+        width: 100%;
+        height: 16px;
+    }
+</style>
+<script type="text/javascript">
+rally.addOnLoad(function () {
+    $(".dijitTooltip").remove();
+    $("#projects").find("a:first").click();
+});
+
+var projects = [];
+
+    #foreach($p in $setting.projects)
+    var wid = "$p.workspace_id";
+    var pid = "$p.project_id";
+    var name = "$p.display_name";
+
+    projects.push({
+        wid: parseInt(wid),
+        pid: parseInt(pid),
+        name: name
+    })
+    ;
+    #end
+
+var stateGroups = [
+    {
+        name: 'Outstanding Defects',
+        states: 'New,Submitted,Assigned,Open,Held,Postponed,Wait,More,Info_req,Forwarded'.split(',')
+    },
+    {
+        name: 'Closed Defects',
+        states: 'Duplicate,Junked,Verified,Unreproducible,Resolved,Closed'.split(',')
+    },
+    {
+        name: 'Total Defects',
+        states: []
+    }
+];
+
+$.fn.RallySummary = function (projects, stateGroups) {
+    var projectNum = projects.length;
+
+    var stateGroupNum = stateGroups.length;
+
+    // should equal projects * states
+    // when all data returned
+    var callResults = 0;
+
+    // 2d array, each value represents,
+    // number of defects for a project of some states
+    var resultArray = [];
+
+    for (var i = 0; i < stateGroupNum; i++) {
+        resultArray.push(new Array(projectNum));
+    }
+
+
+    var _this = $(this.get(0)).html('');
+
+    showSummary();
+
+
+    function showSummary() {
+        $.each(projects, function (i, project) {
+            var rallyDataSource = new rally.sdk.data.RallyDataSource(
+                    project.wid,
+                    project.pid,
+                    false,
+                    true);
+
+            $.each(stateGroups, function (j, stateGroup) {
+                query(rallyDataSource, stateGroup.states, i, j);
+            });
+        });
+    }
+
+
+    function query(rallyDataSource, states, pidx, sidx) {
+        var q = [];
+
+        $.each(states, function (idx, state) {
+            q.push('State = "' + state + '"');
+        });
+
+        var query = rally.sdk.util.Query.or(q);
+
+        var queryObject = {
+            key: "defects",
+            type: "defect",
+            query: query,
+            start: 1,
+            pagesize: 1
+        };
+
+        rallyDataSource.find(queryObject, (function (pidx, sidx) {
+            return function (results) {
+                assemblyPoint(results, pidx, sidx);
+            }
+        })(pidx, sidx));
+    }
+
+
+    function assemblyPoint(results, pidx, sidx) {
+        var cnt = results.defects.TotalResultCount;
+        callResults++;
+
+        if (!(typeof resultArray[sidx][pidx] == "number")) resultArray[sidx][pidx] = cnt;
+        else resultArray[sidx][pidx] += cnt;
+
+        if (callResults == projectNum * stateGroupNum) {
+            show();
+            resize();
+        }
+    }
+
+
+    function show() {
+        var tbl = $('<table class="tbl"></table>');
+        var thead = $('<thead></thead>');
+        var tbody = $('<tbody></tbody>');
+        var tfoot = $('<tfoot></tfoot>');
+        var tr;
+        tbl.append(thead).append(tbody).append(tfoot);
+
+        tr = $('<tr></tr>').append('<th>Project</th>');
+        $.each(stateGroups, function (idx, stateGroup) {
+            tr.append('<th>' + stateGroup.name + '</th>');
+        });
+        thead.append(tr);
+
+        var sum = new Array(stateGroupNum);
+
+        $.each(projects, function (pidx, project) {
+            tr = $('<tr></tr>');
+            tr.append('<td>' + project.name + '</td>');
+            $.each(stateGroups, function (sidx, stateGroup) {
+                tr.append('<td>' + resultArray[sidx][pidx] + '</td>');
+                if (typeof sum[sidx] != "number") sum[sidx] = 0;
+                sum[sidx] += resultArray[sidx][pidx];
+            });
+            tbody.append(tr);
+        });
+
+        tr = $('<tr></tr>').append('<td>Total</td>');
+        $.each(sum, function (i, num) {
+            tr.append('<td>' + num + '</td>');
+        });
+        tfoot.append(tr);
+
+        _this.append(tbl);
+
+        _this.append('<div id="status" style="padding-top: 5px; color: #888; text-align: center;"> <b style="color: #444;">Outstanding Status</b>: New,Submitted,Assigned,Open,Held,Postponed,Wait,More,Info_req,Forwarded </div>');
+    }
+}
+
+
+$.fn.RallyDefectList = function (workspace, project) {
+    var _this = $(this.get(0)).html('');
+
+    var page = 0;
+    var pageSize = 10;
+    var records = 0;
+
+    foo();
+
+
+    function foo() {
+        var rallyDataSource = new rally.sdk.data.RallyDataSource(
+                workspace,
+                project,
+                false,
+                true);
+
+        var q = [];
+
+        _this.find('table:first').find('input:text').each(function (idx, el) {
+            var val = $.trim($(el).val());
+            if (val == "") return;
+            var key = $(el).attr('key');
+
+            val = val.split(',');
+            val = $.map(val, function (v) {
+                v = $.trim(v);
+                return key + ' = "' + v + '"';
+            });
+
+            var s = val.shift();
+            $.each(val, function (i, v) {
+                s = '(' + s + ') OR (' + v + ')';
+            });
+            q.push(s);
+        });
+
+        var query;
+
+        if (q.length == 0) {
+            query = rally.sdk.util.Query.and([]);
+        } else if (q.length == 1) {
+            console.log(q[0]);
+            query = new rally.sdk.util.Query(q[0]);
+        } else if (q.length > 1) {
+            var s = q.shift();
+            $.each(q, function (i, v) {
+                s = '(' + s + ') AND (' + v + ')';
+            });
+            query = new rally.sdk.util.Query(s);
+        }
+
+
+        var queryObject = {
+            key: "defects",
+            type: "defect",
+            fetch: "FormattedID,Name,Severity,Priority,State,SubmittedBy,Owner",
+            query: query,
+            start: (page * pageSize + 1),
+            pagesize: pageSize
+        };
+
+        rallyDataSource.find(queryObject, showDefects, onError);
+    }
+
+
+    function showDefects(results) {
+        addDefectTable(results);
+        resize();
+    }
+
+    function onError() {
+
+    }
+
+
+    var headers = [
+        {key: 'FormattedID', header: 'Formatted ID', fetch: "FormattedID", query: "FormattedID"},
+        {key: 'Severity', header: 'Severity', fetch: "Severity", query: "Severity"},
+        {key: 'Priority', header: 'Priority', fetch: "Priority", query: "Priority"},
+        {key: 'State', header: 'State', fetch: "State", query: "State"},
+        {key: 'SubmittedBy._refObjectName', header: 'Submitted By', fetch: "SubmittedBy", query: "SubmittedBy.DisplayName"},
+        {key: 'Owner._refObjectName', header: 'Owner', fetch: "Owner", query: "Owner.DisplayName"},
+        {key: 'Name', header: "Title", fetch: "Name", query: "Name"}
+    ];
+
+    function addDefectTable(results) {
+        var defects = results.defects;
+        records = defects.TotalResultCount;
+
+        if (_this.find('table').length > 0) {
+            var tbl = _this.find('table:first');
+            tbl.find('tbody').remove();
+            addDefectBody(tbl, defects);
+            updateDefectPager(tbl);
+        } else {
+            var tbl = $('<table></table>').addClass('tbl');
+            addDefectHeader(tbl);
+
+            addDefectBody(tbl, defects);
+
+            addDefectPager(tbl);
+
+            _this.html('').append(tbl);
+        }
+    }
+
+    function addDefectHeader(tbl) {
+        var thead = $('<thead></thead>');
+        var tr = $('<tr></tr>');
+
+        // header names
+        $.each(headers, function (idx, header) {
+            var val = header.header;
+            if (!val) val = header.key;
+            tr.append('<th>' + val + '</th>');
+        });
+        thead.append(tr);
+
+
+        // header filters
+        tr = $('<tr class="nopadding"></tr>');
+        tr.append('<th></th>');
+        tr.append('<th><input type="text" key="' + headers[1].query + '" /></th>');
+        tr.append('<th><input type="text" key="' + headers[2].query + '" /></th>');
+        tr.append('<th><input type="text" key="' + headers[3].query + '" /></th>');
+        tr.append('<th><input type="text" key="' + headers[4].query + '" /></th>');
+        tr.append('<th><input type="text" key="' + headers[5].query + '" /></th>');
+        tr.append('<th><input type="button" id="f" value="Filter" /></th>');
+        thead.append(tr);
+
+        tr.find('#f').click(function () {
+            page = 0;
+            foo();
+        });
+
+        tbl.append(thead);
+    }
+
+    function addDefectBody(tbl, defects) {
+        var tbody = $('<tbody></tbody>');
+
+        $.each(defects, function (idx, defect) {
+            var tr = $('<tr></tr>'), td;
+
+            $.each(headers, function (idx, header) {
+                var key = header.key;
+                var val = "";
+
+                try {
+                    val = eval('defect.' + key);
+                } catch (e) {
+                }
+
+                val = val.replace(/"/g, '&quot;');
+                tr.append('<td title="' + val + '">' + val + '</td>');
+            });
+
+            tbody.append(tr);
+        });
+
+        tbl.append(tbody);
+    }
+
+
+    function addDefectPager(tbl) {
+        tbl.find('tfoot').remove();
+        tbl.append('' +
+                '<tfoot>' +
+                '   <tr>' +
+                '       <td colspan="7" style="text-align: right;">' +
+                '           <span>Page ' + (page + 1) + ' of ' + Math.ceil(records / pageSize) + ', Defects ' + records + '</span>' +
+                '           <a href="javascript:;" k="prev" class="btn01">Prev</a>' +
+                '           <a href="javascript:;" k="next" class="btn01">Next</a>' +
+                '       </td>' +
+                '   </tr>' +
+                '</tfoot>');
+
+        tbl.find('tfoot').find('a[k=prev]').click(function () {
+            page--;
+            foo();
+        });
+
+        tbl.find('tfoot').find('a[k=next]').click(function () {
+            page++;
+            foo();
+        });
+
+        updateDefectPager(tbl);
+    }
+
+    function updateDefectPager(tbl) {
+        tbl.find('tfoot').find('span').html('Page ' + (page + 1) + ' of ' + Math.ceil(records / pageSize) + ', Defects ' + records);
+
+        if (page == 0) {
+            tbl.find('tfoot').find('a[k=prev]').hide();
+        } else if (page == Math.ceil(records / pageSize) - 1) {
+            tbl.find('tfoot').find('a[k=next]').hide();
+        } else {
+            tbl.find('tfoot').find('a:hidden').show();
+        }
+
+    }
+}
+
+
+function waitReady() {
+    if (!!rally.sdk.data) {
+        setTimeout(function () {
+            $("#projects").find("a:first").click();
+        }, 1000);
+
+    } else {
+        setTimeout(waitReady, 200);
+    }
+}
+
+$(function () {
+    $("#projects").MenuBar();
+    $("#projects").MenuBar('on', 'click', function (menuBar, menuItem) {
+        var wsid = menuItem.attr('ws');
+        var pjtid = menuItem.attr('pjt');
+
+        if (!wsid) {
+            $("#defectDiv").RallySummary(projects, stateGroups);
+        } else {
+            workspace = wsid;
+            project = pjtid;
+            $("#defectDiv").RallyDefectList(workspace, project);
+        }
+    });
+    waitReady();
+});
+</script>
+</head>
+<body style="padding: 0; margin: 0;">
+    <div style="text-align: center;" id="projects">
+        <a href="javascript:;"
+           style="font-variant: small-caps; font-weight: bold;">Total</a>#foreach($p in $setting.projects)<a
+            href="javascript:void(0)" ws="$p.workspace_id" pjt="$p.project_id">$p.display_name</a>#end
+    </div>
+
+    <div id="defectDiv"></div>
+</body>

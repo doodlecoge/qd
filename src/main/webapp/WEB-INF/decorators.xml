@@ -1,0 +1,33 @@
+<decorators defaultdir="/decorators">
+    <decorator name="null">
+        <pattern>/login</pattern>
+        <pattern>*.css</pattern>
+        <pattern>*.js</pattern>
+        <pattern>/widget/projcodes</pattern>
+        <pattern>/widget/getdb2</pattern>
+        <pattern>/widget/chg_db_name</pattern>
+        <pattern>/widget/get_db_user</pattern>
+        <pattern>/widget/get_all_users</pattern>
+        <pattern>/widget/add_db_user</pattern>
+        <pattern>/widget/del_db_user</pattern>
+
+        <pattern>/dashboard/widget_panel</pattern>
+        <pattern>/dashboard/add_db_panel</pattern>
+        <pattern>/dashboard/edit_db_names</pattern>
+        <pattern>/dashboard/copy_db_panel</pattern>
+        <pattern>/dashboard/group_manage_panel</pattern>
+        <pattern>/dashboard/user_panel</pattern>
+        <pattern>/dashboard/get_nav_bar</pattern>
+        <pattern>/dashboard/search_db</pattern>
+        <pattern>/dashboard/public_db_manager</pattern>
+        <pattern>/dashboard/workspace_manager</pattern>
+        <pattern>/dashboard/header/*</pattern>
+        <pattern>/t/*</pattern>
+        <pattern>/partial/*</pattern>
+    </decorator>
+
+    <decorator name="main" page="main.vm">
+        <pattern>/dashboard/*</pattern>
+        <pattern>/dashboard</pattern>
+    </decorator>
+</decorators>

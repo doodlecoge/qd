@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rally Widget Setting Help</title>
+    <link href="../help.css" type="text/css" rel="stylesheet"/>
+
+    <style type="text/css">
+
+    </style>
+</head>
+<body>
+<div class="content">
+    <h3>1. Rally Setting Overview</h3>
+
+    <p>
+        Rally setting consists of there major parts:
+    <ol>
+        <li>
+            login key
+        </li>
+        <li>
+            workspace id
+        </li>
+        <li>
+            project id
+        </li>
+    </ol>
+    </p>
+    <div class="img-box">
+        <div class="img-title">
+            Fig. 1 Rally Setting
+        </div>
+        <div class="img-content">
+            <img src="rally-setting.png"/>
+        </div>
+    </div>
+
+
+    <h3>2. Login Key</h3>
+
+    <p>
+        This widget use Rally SDK to fetch data from Rally.
+        Using the SDK is as simple as including the script in html,
+        like the following line.
+    </p>
+
+    <code>
+        &lt;script type="text/javascript"
+        src="https://rally1.rallydev.com/apps/1.25/sdk.js?loginKey=ENCODED-STRING-GOES-HERE"&gt;&lt;/script&gt;
+    </code>
+
+    <p>
+        To use Rally SDK externally, we need to attach login key as parameter "loginKey" to previous script url,
+        otherwise will fail to get data.
+    </p>
+
+    <p>
+        Two options:
+    <ol>
+        <li>
+            Leave this field blank if you have added
+            <a href="http://wwwin-tools.cisex.com/dir/details/huaiwang" target="_blank">Huaichao Wang</a>
+            as a viewer for each project you are adding;
+        </li>
+        <li>
+            Or,
+            <a href="https://rally1.rallydev.com/apps/html/EncoderPage.html" target="_blank">click here</a>
+            to generate login key using another read only account. However, this account should be added to
+            SSO-exception list first by open a REMEDY case at
+            <a href="http://srm/rally+user">http://srm/rally+user</a>.
+        </li>
+    </ol>
+    </p>
+
+
+    <h3>3. Workspace ID & Project ID</h3>
+
+    <p>
+    The project id is easy to get, but you should first
+        <a href="https://sso.rallydev.com/sp/startSSO.ping?PartnerIdpId=cloudsso.cisex.com">login Rally</a>
+        and switch to your project.
+    And the project id is there in the url as shown in Fig. 2.
+    </p>
+    <div class="img-box">
+        <div class="img-title">
+            Fig. 2 get project id
+        </div>
+        <div class="img-content">
+            <img src="rally_url.png"/>
+        </div>
+    </div>
+
+    <p>
+    To get workspace id, visit the following url:
+    </p>
+    <div class="tip">
+        https://us1.rallydev.com/slm/webservice/v2.x/Workspace
+    </div>
+    <p>
+    and will be responded with json like the following:
+    </p>
+    <div class="tip">
+        <pre>
+        {
+            "QueryResult": {
+                "_rallyAPIMajor": "2",
+                "_rallyAPIMinor": "0",
+                "Errors": [],
+                "Warnings": [],
+                "TotalResultCount": 1,
+                "StartIndex": 1,
+                "PageSize": 20,
+                "Results": [
+                    {
+                        "_rallyAPIMajor": "2",
+                        "_rallyAPIMinor": "0",
+                        "_ref": "https://us1.rallydev.com/slm/webservice/v2.x/workspace/4417483097",
+                        "_refObjectName": "CCATG",
+                        "_type": "Workspace"
+                    }
+                ]
+            }
+        }</pre>
+    </div>
+    <p>
+    then you can extract workspace id from jsonObj.QueryResult.Results[0]._ref and will get 4417483097.
+    </p>
+
+
+
+
+
+</div>
+
+</body>
+</html>

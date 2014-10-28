@@ -1,0 +1,185 @@
+#* @vtlvariable name="setting" type="com.webex.qd.widget.RallyWidget.Configuration" *#
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<head>
+    <link type="text/css" rel="stylesheet" href="${base}/css/common.css"/>
+    <link type="text/css" rel="stylesheet" href="${base}/css/jquery.plugins.css"/>
+    <link type="text/css" rel="stylesheet" href="${base}/css/font-awesome.css"/>
+
+    #if($setting.loginKey)
+        <script a="b" type="text/javascript"
+                src="https://rally1.rallydev.com/apps/1.32/sdk.js?showHeader=false&loginKey=$setting.loginKey"></script>
+    #else
+        <script type="text/javascript"
+                src="https://rally1.rallydev.com/apps/1.32/sdk.js?showHeader=false&loginKey=$RallyHuaiChaoLoginKey"></script>
+    #end
+
+    <script src="${base}/script/jquery172.js" type="text/javascript"></script>
+
+    <script src="${base}/script/common.js" type="text/javascript"></script>
+    <script src="${base}/script/jquery.plugins.js" type="text/javascript"></script>
+
+    <script type="text/javascript">
+
+            #if($setting.useSpecifiedLoginKey())
+            var loginKey = "$setting.login_key";
+            #else
+            var loginKey = "$RallyHuaiChaoLoginKey";
+            #end
+
+
+    </script>
+
+    <script type="text/javascript">
+        var workspace = "4417483097";
+        var project = "6586346845";
+        var iterDropDown;
+
+
+        function onIterationSelected() {
+            var item = iterDropDown.getSelectedItem();
+            showChart(item['_refObjectName']);
+        }
+
+
+        function showChart(iterName) {
+            var queryConfig = {
+                type: 'iteration',
+                key: 'iters',
+                query: '(Name = "' + iterName + '")',
+                fetch: 'Name,ScheduleState'
+            };
+
+            rallyDataSource.findAll(queryConfig, showIterations);
+        }
+
+
+        function showIterations(results) {
+            if (results.errors.length > 0) return [];
+
+            var ids = $.map(results['iters'], function (iter, idx) {
+                var url = iter['_ref'];
+                var iterOid = url.match(/(\d+)\.js$/)[1];
+                return iterOid;
+            });
+
+
+            var width = parseInt($(document.body).width() * 0.9);
+            var height = parseInt(width * 0.5);
+            height = Math.min(height, 360);
+
+
+            var report = rally.sdk.ui.StandardReport.IterationBurndown;
+            #if ($setting.chartType == 'BurnUp')
+                report = rally.sdk.ui.StandardReport.IterationBurnup;
+            #elseif ($setting.chartType == 'Velocity')
+                report = rally.sdk.ui.StandardReport.VelocityChart;
+            #elseif ($setting.chartType == 'CycleLeadTime')
+                report = rally.sdk.ui.StandardReport.CycleLeadTime;
+            #elseif ($setting.chartType == 'IterationCumulativeFlowDiagram')
+                report = rally.sdk.ui.StandardReport.IterationCumulativeFlowDiagram;
+            #elseif ($setting.chartType == 'ReleaseBurnup')
+                report = rally.sdk.ui.StandardReport.ReleaseBurnup;
+            #elseif ($setting.chartType == 'ReleaseCumulativeFlowDiagram')
+                report = rally.sdk.ui.StandardReport.ReleaseCumulativeFlowDiagram;
+##            #elseif ($setting.chartType == 'StoryBurndown')
+##                report = rally.sdk.ui.StandardReport.StoryBurndown;
+##            #elseif ($setting.chartType == 'StoryBurnup')
+##                report = rally.sdk.ui.StandardReport.StoryBurnup;
+##            #elseif ($setting.chartType == 'StoryCumulativeFlowDiagram')
+##                report = rally.sdk.ui.StandardReport.StoryCumulativeFlowDiagram;
+##            #elseif ($setting.chartType == 'TaggedStoryBurndown')
+##                report = rally.sdk.ui.StandardReport.TaggedStoryBurndown;
+            #elseif ($setting.chartType == 'Throughput')
+                report = rally.sdk.ui.StandardReport.Throughput;
+            #end
+
+            var config = {
+                report: report,
+                iterations: ids.join(","),
+                width: width,
+                height: height,
+                workspace: workspace,
+                project: project
+            };
+
+            var report = new rally.sdk.ui.StandardReport(config);
+            report.display("reportDiv");
+
+            resize();
+        }
+
+
+
+
+        var rallyDataSource = null;
+        function foo() {
+            $(".dijitTooltip").remove();
+
+            rallyDataSource = new rally.sdk.data.RallyDataSource(
+                    workspace, project, true, true
+            );
+
+            if (iterDropDown) {
+                iterDropDown.destroy();
+            }
+
+            iterDropDown = new rally.sdk.ui.IterationDropdown({label: ""}, rallyDataSource);
+
+            iterDropDown.display(
+                    document.getElementById("iterDiv"),
+                    onIterationSelected
+            );
+
+
+            $(".dijitTooltip").remove();
+        }
+
+
+        $(function () {
+            $("#projects").MenuBar();
+            $("#projects").MenuBar('on', 'click', function (menuBar, menuItem) {
+                var wsid = menuItem.attr('ws');
+                var pjtid = menuItem.attr('pjt');
+                workspace = wsid;
+                project = pjtid;
+
+                foo();
+            });
+
+
+            $(function () {
+                rally.addOnLoad(function () {
+                });
+                waitReady();
+            });
+
+
+            function waitReady() {
+                if (!!rally.sdk.data) {
+                    setTimeout(function () {
+                        $("#projects").find("a:first").click();
+                    }, 1000);
+                } else {
+                    setTimeout(waitReady, 200);
+                }
+            }
+        });
+
+
+    </script>
+</head>
+<body style="padding: 0; margin: 0;">
+
+<div style="text-align: center;" id="projects">
+    #foreach($p in $setting.projects)<a href="javascript:void(0)"
+                                        ws="$p.workspace_id"
+                                        pjt="$p.project_id">$p.display_name</a>#end
+</div>
+
+<div style="text-align: center;">
+    <div id="iterDiv"></div>
+</div>
+<div id="reportDiv"></div>
+
+</body>

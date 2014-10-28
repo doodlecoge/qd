@@ -1,0 +1,201 @@
+#* @vtlvariable name="setting" type="com.webex.qd.widget.DailyChangesWidget.Configuration" *#
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+#set($basePath = $request.getScheme()+"://"+$request.getServerName()+":" +$request.getServerPort())
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <script type="text/javascript" src="${base}/script/jquery172.js"></script>
+    <script type="text/javascript" src="${base}/script/jquery.form.min.js"></script>
+    <script type="text/javascript" src="${base}/script/common.js"></script>
+
+    <link type="text/css" rel="stylesheet" href="${base}/css/common.css" />
+    <link type="text/css" rel="stylesheet" href="${base}/css/setting.css" />
+    <link type="text/css" rel="stylesheet" href="${base}/css/setting_common.css" />
+    <script type="text/javascript">
+        $(function() {
+            var dailyChanges_lst = $("#dailyChanges_lst");
+            dailyChanges_lst.click(function(e) {
+                var el = $(e.target);
+                if(el.hasClass('del')) el.parent().parent().remove();
+            });
+            if(dailyChanges_lst.find("tbody tr").length == 0){
+                addNewRow(0);
+                resizeIfrmSize("setting");
+            }
+            $("#add").click(function() {
+                var maxIdx = $("#dailyChanges_lst tbody tr").last().attr("eidx");
+                var newIdx = 1;
+                if (maxIdx != null) {
+                    newIdx = parseInt(maxIdx) + 1;
+                }
+
+                addNewRow(newIdx);
+                resizeIfrmSize("setting");
+            });
+
+        });
+
+        function addNewRow(idx) {
+            var tr = $('<tr></tr>');
+            tr.attr("eidx", idx);
+
+            var nameTd = $('<td><input name="" type="text" style="width: 90%" class="text ui-corner-all ui-widget-content"></td>');
+            nameTd.children().first().attr("name", "configEntries[" + idx + "].displayName");
+            tr.append(nameTd);
+
+            var typeTd = $('<td><select name="" ><option value="5" >time(monthly)</option><option value="7" >time(weekly)</option><option value="6" >user</option></select></td>');
+            typeTd.children().first().attr("name","configEntries[" + idx + "].type")
+            tr.append(typeTd);
+
+            var urlTd = $('<td><input type="hidden" name="" value=""/></td>');
+            urlTd.children().first().attr("name","configEntries[" + idx + "].url")
+            urlTd.children().first().attr("value","$basePath")
+            tr.append(urlTd);
+
+            var fromtimeTd = $('<td><input name="" type="text" style="width: 90%" class="text ui-corner-all ui-widget-content"></td>');
+            fromtimeTd.children().first().attr("name", "configEntries[" + idx + "].fromTime");
+            tr.append(fromtimeTd);
+
+            var tildeTd = $('<td>~</td>');
+            tr.append(tildeTd);
+
+            var totimeTd = $('<td><input name="" type="text" style="width: 90%" class="text ui-corner-all ui-widget-content"></td>');
+            totimeTd.children().first().attr("name", "configEntries[" + idx + "].toTime");
+            tr.append(totimeTd);
+
+            var repoTd = $('<td><input name="" type="text" style="width: 90%" class="text ui-corner-all ui-widget-content"></td>');
+            repoTd.children().first().attr("name", "configEntries[" + idx + "].repo");
+            tr.append(repoTd);
+
+            var branchTd = $('<td><input name="" type="text" style="width: 90%" class="text ui-corner-all ui-widget-content"></td>');
+            branchTd.children().first().attr("name", "configEntries[" + idx + "].branch");
+            tr.append(branchTd);
+
+            var userTd = $('<td><input name="" type="text" style="width: 90%" class="text ui-corner-all ui-widget-content" onblur=""></td>');
+            userTd.children().first().attr("name", "configEntries[" + idx + "].user");
+            tr.append(userTd);
+
+            var limitNumTd = $('<td><input name="" type="text"  value="" style="width: 30px" class="text ui-corner-all ui-widget-content" onblur=""></td>');
+            limitNumTd.children().first().attr("name", "configEntries[" + idx + "].limitNum");
+            limitNumTd.children().first().attr("value", "500");
+            tr.append(limitNumTd);
+
+            var deleteButton = $('<td><a class="btn01 del" href="javascript:void(0)">Delete</a></td>');
+            tr.append(deleteButton);
+            $("#dailyChanges_lst tbody").append(tr);
+        }
+
+        function deleteRow() {
+
+        }
+
+        function setType(val,idx){
+            if(val==''||val==null){
+                document.getElementById("configEntries["+idx+"].type").value="5"
+            }else{
+                document.getElementById("configEntries["+idx+"].type").value="6"
+            }
+        }
+    </script>
+</head>
+<body>
+<form id="jsonForm" action="save" method="post">
+    <ul>
+        <li>
+            <span>Widget Name:</span><br>
+            <label for="name"></label><input type="text" value="$name" style="width: 90%" name="name" id="name" class="text ui-corner-all ui-widget-content">
+        </li>
+
+        <li>
+            <span>Change Logs Settings:</span>
+            <table class="tbl" id="dailyChanges_lst" width="100%">
+                <thead>
+                <tr>
+                    <th>Display Name<i class="req"></i></th>
+                    <th></th>
+                    <th></th>
+                    <th colspan="3">period(Format:YYYY-MM-DD)</th>
+                    <th>Repo</th>
+                    <th>Branch</th>
+                    <th>User</th>
+                    <th>Limit Num</th>
+##                    <th>user or list</th>
+                </tr>
+                </thead>
+                <tbody>
+                    #set($idx = 0)
+                    #if($setting.configEntries.size() >0)
+                        #foreach($entry in $setting.configEntries)
+                        <tr eidx='$idx'>
+                            <td>
+                                <input name="configEntries[$idx].displayName" type="text" style="width: 90%"
+                                       class="text ui-corner-all ui-widget-content" value="$entry.displayName">
+                            </td>
+                            <td>
+##                                <input type="checkbox" name="configEntries[$idx].isChart" value="$entry.isChart"/> x
+                                <select name="configEntries[$idx].type" >
+##                                    <option value="1" #if($entry.type=="1")selected #end>time</option>
+##                                    <option value="2" #if($entry.type=="2")selected #end>repo</option>
+##                                    <option value="3" #if($entry.type=="3")selected #end>branch</option>
+                                    <option value="5" #if($entry.type=="5")selected #end >time(monthly)</option>
+                                    <option value="7" #if($entry.type=="7")selected #end >time(weekly)</option>
+                                    <option value="6" #if($entry.type=="6")selected #end >user</option>
+                                </select>
+                            </td>
+##                            <td>
+##                                <input name="configEntries[$idx].type" id="configEntries[$idx].type" type="text" style="width: 90%"
+##                                       class="text ui-corner-all ui-widget-content" value="$entry.type">
+##                            </td>
+                            <td>
+                                <input name="configEntries[$idx].url" type="hidden" style="width: 90%"
+                                       class="text ui-corner-all ui-widget-content" value="$basePath">
+                            </td>
+                            <td>
+                                <input name="configEntries[$idx].fromTime" type="text" style="width: 90%"
+                                       class="text ui-corner-all ui-widget-content" value="$entry.fromTime">
+                            </td>
+                            <td>
+                               ~
+                            </td>
+                            <td>
+                                <input name="configEntries[$idx].toTime" type="text" style="width: 90%"
+                                       class="text ui-corner-all ui-widget-content" value="$entry.toTime">
+                            </td>
+                            <td>
+                                <input name="configEntries[$idx].repo" type="text" style="width: 90%"
+                                       class="text ui-corner-all ui-widget-content" value="$entry.repo">
+                            </td>
+                            <td>
+                                <input name="configEntries[$idx].branch" type="text" style="width: 90%"
+                                       class="text ui-corner-all ui-widget-content" value="$entry.branch">
+                            </td>
+                            <td>
+                                <input name="configEntries[$idx].user" type="text" style="width: 90%"
+                                       class="text ui-corner-all ui-widget-content" value="$entry.user"  >
+                            </td>
+                            <td>
+                                <input name="configEntries[$idx].limitNum" type="text" style="width: 30px"
+                                       class="text ui-corner-all ui-widget-content" value="$entry.limitNum" >
+                            </td>
+                            <td><a class="btn01 del" href="javascript:void(0)">Delete</a></td>
+                        </tr>
+                            #set($idx = $idx + 1)
+                        #end
+                    #else
+
+                    #end
+                </tbody>
+                <tfoot>
+                <tr style="min-height: 35px; height: 35px;">
+                    <td colspan="10" style="text-align: right;">
+                        <a href="javascript:void(0)" class="btn01" id="add">Add More ...</a>
+                    </td>
+                </tr>
+                </tfoot>
+            </table>
+        </li>
+
+    </ul>
+</form>
+</body>
+</html>

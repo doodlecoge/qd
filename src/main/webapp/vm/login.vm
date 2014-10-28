@@ -1,0 +1,97 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <link rel="stylesheet" type="text/css" href="${base}/css/common.css" media="screen"/>
+    <link rel="stylesheet" type="text/css" href='${base}/css/default.css'/>
+    <link rel="stylesheet" type="text/css" href="${base}/css/jquery-ui-1.8.22.custom.css" media="screen"/>
+
+    <script src="${base}/script/jquery172.js" type="text/javascript"></script>
+    <script src="${base}/script/jquery-ui-1.8.22.custom.min.js" type="text/javascript"></script>
+    <script src="${base}/script/json2.js" type="text/javascript"></script>
+
+    <script type="text/javascript">
+        $(function() {
+
+            setTimeout(function() {
+                $("img#wbx_ball").addClass("start");
+            }, 1000);
+
+            var wh = $(window).height();
+            var dh = $(document.body).height();
+
+            var hh = $("#wphead").outerHeight();
+            var fh = $("#form").outerHeight();
+            var fh2 = $("#wpfoot").outerHeight();
+
+
+            if((fh2 + hh + fh) < wh) {
+                $("#form").height(Math.ceil(wh - hh - fh2));
+            }
+
+
+            // set fouse to first input box
+            $("input:text:first").focus();
+        });
+
+        if(!location.pathname.match(/.*login$/)) location.href = "${base}/login";
+    </script>
+</head>
+<body>
+
+<div id="wphead">
+    <div class="logo">
+        <div class="logo" style="background: url(images/cisex_logo.png) right 8px no-repeat; margin-right: 8px;">
+            <img id="wbx_ball" src="${base}/images/wbx_ball.png" width="50" height="50" alt="Quality Dashboard" />
+        </div>
+    </div>
+</div>
+
+<div id="form" style="overflow:hidden;">
+    <form name="f" action="${base}/j_spring_security_check" method="POST">
+        #if($loginError && $loginError == 1)
+            <div style="padding: 10px 100px; margin: 10px; font-size: 16px; background: #cc4500; color: #fff;">
+                Login Failed!
+            </div>
+        #end
+        <div style="padding: 50px 30px;">
+            <table style="font-size: 10px; color: #555555;">
+                <tr>
+                    <td>CEC:</td>
+                    <td>
+                        <input type="text" name="j_username" value="" class="box" maxlength="45" style="width: 250px" />
+                    </td>
+                </tr>
+                <tr>
+                    <td align="right">CEC Password:</td>
+                    <td>
+                        <input type="password" name="j_password" class="box" maxlength="25" style="width: 250px"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="right"></td>
+                    <td>
+                        <input type="checkbox" id="_spring_security_remember_me"
+                               name="_spring_security_remember_me"
+                               style="border: none; position: relative; top: 3px;"/>
+                        <label for="_spring_security_remember_me">
+                            Remember me for two weeks
+                        </label>
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td style="padding-top: 10px;">
+                        <input name="submit" type="submit" value="Login" class="button"/>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </form>
+</div>
+
+
+<div id="wpfoot">
+    Quality Dashboard Version 1.0.1 &copy; 2014 cisex Systems, Inc. All rights reserved. <a href="mailto:qd-dev@cisex.com" style="color:blue;font-size:13px;">Contact Us</a>
+</div>
+</body>

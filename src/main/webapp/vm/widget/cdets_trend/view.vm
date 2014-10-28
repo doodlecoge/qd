@@ -1,0 +1,206 @@
+#* @vtlvariable name="setting"                type="com.webex.qd.widget.CdetsTrendWidget.Configuration" *#
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <link type="text/css" rel="stylesheet" href="${base}/css/common.css"/>
+    <link type="text/css" rel="stylesheet" href="${base}/css/jquery.plugins.css"/>
+    <style type="text/css">
+        .tbl {
+            border-collapse: separate;
+        }
+
+        .tbl td {
+            text-align: center;
+            cursor: pointer;
+            margin: 5px;
+            background: #ddd;
+        }
+
+        .tbl .sel {
+            background: #4B9FD5;
+            font-weight: bold;
+            color: #fff;
+        }
+    </style>
+
+    <script src="${base}/script/jquery172.js" type="text/javascript"></script>
+    <script src="${base}/script/common.js" type="text/javascript"></script>
+    <script src="${base}/script/highstock.js" type="text/javascript"></script>
+
+    <script type="text/javascript">
+        Highcharts.setOptions({
+            global: {
+                useUTC: false
+            }
+        });
+
+        var disNames = [];
+            #foreach($query in $setting.queries)
+            disNames.push("$query.name");
+            #end
+
+        var names = ['Submitted', 'Resolved', 'Verified'];
+
+
+        function showLabels() {
+            var cont = $("#cont");
+
+            if(disNames.length == 0) {
+                cont.html('No Query, please add one/some first.');
+                return;
+            }
+
+            var tbl = $('<table class="tbl"></table>');
+            var tbd = $('<tbody></tbody>');
+            var tr, td;
+
+            var w = cont.width();
+            var cols = Math.ceil(w / 150);
+            var len = disNames.length;
+
+            if (cols > len) cols = len;
+            var row = Math.ceil(len / cols);
+            cols = Math.ceil(len / row);
+
+            $.each(disNames, function (i, name) {
+                if (i % cols == 0) {
+                    tr = $('<tr></tr>');
+                    tbd.append(tr);
+                }
+
+                td = $('<td>' + name + '</td>');
+                tr.append(td);
+            });
+
+            if(len % cols != 0) {
+                for (var i = 0; i < cols - len % cols; i++) {
+                    tr.append('<td></td>');
+                }
+            }
+
+            tbl.append(tbd);
+            cont.append(tbl);
+        }
+
+        function showTrends(idx) {
+            if (idx >= disNames.length) return;
+
+            var series = [];
+            var seriesCount = 0;
+
+            var xhr = $.ajax({
+                url: '${base}/widget/cdets/cdets_daily_bugs',
+                data: {
+                    wid: $widget.id,
+                    idx: idx
+                },
+                dataType: 'json',
+                cache: false
+            });
+
+            xhr.done(function(data) {
+                var arr = data;
+
+                $.each(names, function(i, name) {
+                    series[i] = {name: name, data: arr[i], type: 'spline'};
+                });
+
+                show(series);
+                resize();
+            });
+
+            xhr.fail(function(data) {
+                var loc = location.href + '&t=' + (new Date() - 0);
+                $("#content").find('div:first')
+                        .html('Loading failed! <a href="' + loc + '">Reload</a>');
+            });
+        }
+
+
+        function show(series) {
+            var cont = $("#cont").find("div");
+            if (cont.length == 0) {
+                cont = $("<div></div>");
+                $("#cont").append(cont);
+            }
+
+
+            cont.highcharts('StockChart', {
+                rangeSelector: {
+                    selected: 0
+                },
+                legend: {
+                    enabled: true,
+                    verticalAlign: 'top'
+                },
+                series: series,
+                rangeSelector: {
+                    buttons: [
+                        {
+                            type: 'week',
+                            count: 1,
+                            text: '1w'
+                        },
+                        {
+                            type: 'month',
+                            count: 1,
+                            text: '1m'
+                        },
+                        {
+                            type: 'month',
+                            count: 3,
+                            text: '3m'
+                        },
+                        {
+                            type: 'month',
+                            count: 6,
+                            text: '6m'
+                        },
+                        {
+                            type: 'year',
+                            count: 1,
+                            text: '1y'
+                        },
+                        {
+                            type: 'all',
+                            count: 1,
+                            text: 'all'
+                        }
+                    ],
+                    selected: 1,
+                    inputEnabled: false
+                }
+            });
+        }
+
+        $(function () {
+            showLabels();
+
+
+            $(".tbl").click(function (e) {
+                var tag = e.target.nodeName.toLowerCase();
+                if ('td' != tag) return;
+                $(this).find('td').removeClass('sel');
+                var el = $(e.target);
+                el.addClass('sel');
+                var idx = $(this).find('td').index(el);
+
+                showTrends(idx);
+            });
+
+            $(".tbl").find("td:first").click();
+        });
+    </script>
+</head>
+<body style="padding: 0; margin: 0;">
+<div>
+    <div id="cont">
+        <div style="text-align: center; font-size: 14px; font-family: Arial;">
+            <img src="${base}/images/loading.gif" alt=""/>
+        </div>
+    </div>
+</div>
+</body>
+</html>

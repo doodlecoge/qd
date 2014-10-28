@@ -1,0 +1,739 @@
+#* @vtlvariable name="setting" type="com.webex.qd.widget.QddtsWidget.Configuration" *#
+<script type="text/javascript" src="${base}/script/qddts/qddts_cache.js"></script>
+##<script type="text/javascript" src="${base}/script/qddts/jquery.zclip.min.js"></script>
+<link type="text/css" href="${base}/css/nav.css" rel="stylesheet">
+
+<style>
+    img {
+        width: auto\9;
+        height: auto;
+        max-width: 100%;
+        vertical-align: middle;
+        border: 0;
+        -ms-interpolation-mode: bicubic;
+    }
+    .btn {
+        display: inline-block;
+        padding: 4px 12px;
+        margin-bottom: 0;
+        font-size: 14px;
+        line-height: 20px;
+        color: #333;
+        text-align: center;
+        text-shadow: 0 1px 1px rgba(255,255,255,0.75);
+        vertical-align: middle;
+        cursor: pointer;
+        background-color: #f5f5f5;
+        background-image: -moz-linear-gradient(top,#fff,#e6e6e6);
+        background-image: -webkit-gradient(linear,0 0,0 100%,from(#fff),to(#e6e6e6));
+        background-image: -webkit-linear-gradient(top,#fff,#e6e6e6);
+        background-image: -o-linear-gradient(top,#fff,#e6e6e6);
+        background-image: linear-gradient(to bottom,#fff,#e6e6e6);
+        background-repeat: repeat-x;
+        border: 1px solid #ccc;
+        border-color: #e6e6e6 #e6e6e6 #bfbfbf;
+        border-color: rgba(0,0,0,0.1) rgba(0,0,0,0.1) rgba(0,0,0,0.25);
+        border-bottom-color: #b3b3b3;
+        -webkit-border-radius: 4px;
+        -moz-border-radius: 4px;
+        border-radius: 4px;
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffffff',endColorstr='#ffe6e6e6',GradientType=0);
+        filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+        -webkit-box-shadow: inset 0 1px 0 rgba(255,255,255,0.2),0 1px 2px rgba(0,0,0,0.05);
+        -moz-box-shadow: inset 0 1px 0 rgba(255,255,255,0.2),0 1px 2px rgba(0,0,0,0.05);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.2),0 1px 2px rgba(0,0,0,0.05);
+    }
+    #query_info {
+        font-family: Arial;
+        font-size: 12px;
+        color: #666;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    .right {
+        text-align: right;
+    }
+
+    .no_background {
+        background: none !important;
+    }
+
+    .input {
+        min-width: 250px;
+        background: white url(${base}/images/search.png) no-repeat right;
+    }
+
+    .tbl {
+        table-layout: auto;
+    }
+    #refreshBtn{
+        margin-left: 5px;
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+    .btn:hover, .btn:focus, .btn:active, .btn.active, .btn.disabled, .btn[disabled] {
+        color: #333;
+        background-color: #e6e6e6;
+    }
+    .btn:hover, .btn:focus {
+        color: #333;
+        text-decoration: none;
+        background-position: 0 -15px;
+        -webkit-transition: background-position .1s linear;
+        -moz-transition: background-position .1s linear;
+        -o-transition: background-position .1s linear;
+        transition: background-position .1s linear;
+    }
+</style>
+<script>
+var qd = qd || {};
+//var request =
+//{
+//    QueryString: function (val) {
+//        var uri = window.location.search;
+//        var re = new RegExp("" + val + "=([^&?]*)", "ig");
+//        return ((uri.match(re)) ? (uri.match(re)[0].substr(val.length + 1)) : null);
+//    },
+//    GetPath: function () {
+//        var index = window.location.href.lastIndexOf('?');
+//        var href;
+//        if (index == -1) {
+//            href = window.location.href;
+//        } else {
+//            href = window.location.href.substring(0, index);
+//        }
+//        return href;
+//    }
+//}
+//qd.initOptions = function () {
+//    qd.single = {
+//        "GetLink": function () {
+//            return this.href + "?tabIndex=" + this.tabIndex + "&view=" + this.view;
+//        }
+//    };
+//    qd.single.tabIndex = request.QueryString("tabIndex") ? request.QueryString("tabIndex") : 0;
+//    qd.single.view = request.QueryString("view") ? request.QueryString("view") : "pie"
+//    qd.single.href = request.GetPath();
+//}
+qd.showCecInfo=true;
+qd.showSingle = function () {
+    var Data;
+    var setUpTabs = function () {
+        var div = $("#projects");
+        div.find('a').removeClass('sel');
+        div.find('a:eq(0)').addClass('sel');
+        if (!div.attr('init')) {
+            div.click(function (e) {
+                if (!$(e.target).is('a')) {
+                    return false;
+                }
+                div.find('a').removeClass('sel');
+                var el = $(e.target);
+                var t = el.attr('t');
+                if (!t) return false;
+                showGroup(t);
+                el.addClass('sel');
+                return false;
+            });
+            div.attr('init', true);
+        }
+        ;
+
+
+    };
+    var mapToObjects = function (data) {
+        var objects = [];
+        $.each(data, function (i, ele) {
+            var object = [];
+            object.push(i == '' ? 'Not Specified' : i);
+            object.push(ele);
+            objects.push(object);
+        });
+        return objects;
+    };
+    var showGroup = function (t) {
+        $("#query_content").empty();
+        groupFuncs[t]();
+        resize();
+    };
+    var attachAjaxSearch = function (ele, data, func) {
+        var sum = data.length;
+        ele.attachAutoComplement(data, func, 'Search Here( ' + sum + ' results )');
+    };
+    var drawChart = function (data, parent, type, title) {
+        var sum = 0;
+        $.each(data, function (i, e) {
+            sum += e[1];
+        });
+        var chartContent = $('<div id="chartView"></div>');
+        chartContent.html('');
+        parent.append(chartContent)
+        chartContent.highcharts({
+            chart: {
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false
+            },
+            title: {
+                text: title ? title : null
+            },
+            tooltip: {
+                pointFormat: '' +
+                        'Defects: <b>{point.y}</b>/ <b>' + sum + '</b>' +
+                        '<br/>' +
+                        'Percent: <b>{point.percentage:.1f}%</b>'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: true,
+                        color: '#000000',
+                        connectorColor: '#000000',
+                        formatter: function () {
+                            // display only if larger than 1
+                            return this.y > 1 ? '<b>' + this.point.name + ':</b> ' + this.y : null;
+                        }
+                    },
+                    events: {
+                        click: function (e) {
+                            var q;
+                            if (e.point.name == 'Not Specified') {
+                                q = qd.qddts_query_url + query + " minus " + type + "~.*";
+                            } else {
+                                q = qd.qddts_query_url + query + " and " + type + ":" + e.point.name;
+                            }
+
+                            window.open(q, '_blank');
+                        }
+                    }
+                }
+            },
+            series: [
+                {
+                    type: 'pie',
+                    name: 'Defects',
+                    data: data
+                }
+            ]
+        });
+    };
+    var createToolBar = function (data, t) {
+        var tools = $("#tools");
+        tools.append(
+                $("<ol>").addClass("nav").addClass("right").addClass("no_background")
+                        .append(
+                                $("<li>").addClass("sel").append(
+                                        $("<a>").attr('href', "\#\#\#\#").attr('t', 'pie').html('Pie Chart')
+                                )
+                        )
+                        .append(
+                                $("<li>").append(
+                                        $("<a>").attr('href', "\#\#\#\#").attr('t', 'table').html('Table')
+                                )
+                        )
+                        .append(
+                                $("<li>").append(
+                                        $("<a>").attr('href', "\#\#\#\#").attr('t', 'search').html('Search')
+                                )
+                        )
+                        .append(
+                                $("<li>").append(
+                                        $('<input id="searchInput" type="text">').addClass("input")
+                                )
+                        )
+        );
+
+
+        tools.bind("click", function (e) {
+            var target = $(e.target);
+            if (target.is('a')) {
+                tools.find('li').removeClass('sel');
+                target.parent().addClass('sel');
+                var t = target.attr("t");
+
+                if (t == "pie") {
+                    $('#tableView').hide();
+                    $('#chartView').show();
+                    $('#searchInput').parent().hide();
+//                    qd.single.view = "pie";
+                    resize();
+                } else if (t == "table") {
+                    $('#tableView').show();
+                    $('#chartView').hide();
+                    $('#searchInput').parent().hide();
+//                    qd.single.view = "table";
+                    resize();
+                }
+                else {
+                    $('#searchInput').parent().show();
+                }
+
+            }
+            return false;
+        });
+        var input = $('#searchInput');
+        input.parent().hide();
+        attachAjaxSearch(input, data, getCallBackFunc(t))
+    };
+    var getCallBackFunc = function (t) {
+        return function (val) {
+            var q = "";
+            if (val == 'Not Specified') {
+                q = qd.qddts_query_url + query + " minus " + t + "~.*";
+            } else {
+                q = qd.qddts_query_url + query + " and " + t + ":" + val;
+            }
+
+            window.open(q, '_blank');
+        }
+    };
+    var emptyTools = function () {
+        $("#tools").empty();
+    };
+    var longToString = function (time) {
+        time = parseInt(time / 1000);
+        var s = time % 60;
+        time = parseInt(time / 60);
+        var min = time % 60;
+        time = parseInt(time / 60);
+        return time + "<b>  h </b>" + min + "<b>  min </b>" +" ago";
+
+    };
+    var isSelected = function (t) {
+        var map = {"Submitter-id": "Submitter", "DE-manager": "de_manager", "Engineer": "Engineer"};
+        t = map[t];
+        var selected = $("#projects").find("a[t=" + t + "]").hasClass('sel');
+        return selected;
+    }
+    var groupFuncs = {
+        "tab": function () {
+//            qd.single.tabIndex = 0;
+            emptyTools();
+            if (Data["valid"] ) {
+                var bugList = Data["bugDetailList"];
+                attachSeverityStatusTable($('#query_content'), toSeverityStatus(bugList),Data["bugDetailList"].length != 0);
+                var updateLabel = $("<b>").html("Update Time :");
+                var now = new Date();
+                var updateInfo = now.valueOf() - Data['updateTime'];
+                updateInfo = longToString(updateInfo);
+                var queryLabel = $("<b>").html("Query :");
+                var buttonRefresh = $("<img id=\"refreshBtn\"class=\"btn\" title=\"Update Now\" alt=\"Update Now\" src=\"${base}/images/refresh_button.png\" onclick=\"qd.refresh();\">");
+                $("#query_info").empty().append(updateLabel).append(updateInfo).append(buttonRefresh).append("<br>").append(queryLabel).append(query);
+            }
+            else {
+                $("#projects").empty();
+                $("#query_info").empty().append($("<span>").css("color", "red").css("font-size", "13px").html("Sorry,the query is incorrect,please <a target='_blank' href='" + qd.qddts_query_url + query + "'>check the query</a> or <a href='mailto:qd-dev@cisex.com' style='color:blue;font-size:13px;'>Contact Us</a>"));
+            }
+        },
+        "Component": function () {
+//            qd.single.tabIndex = 1;
+            var data = gourpBy(Data["bugDetailList"], "component");
+            var chartData = mapToObjects(data);
+            var query_content = $("#query_content");
+            emptyTools();
+            createToolBar(chartData, 'Component');
+            drawChart(chartData, query_content, "Component");
+//            if(qd.showCecInfo){
+//                createCECInfoKeyValueTable(data, query_content, 'Component');
+//            } else{
+                createKeyValueTable(data, query_content, 'Component')
+//            }
+
+        },
+        "Submitter": function () {
+//            qd.single.tabIndex = 2;
+            var data = gourpBy(Data["bugDetailList"], "submitter");
+            var chartData = mapToObjects(data);
+            var query_content = $("#query_content");
+            emptyTools();
+            createToolBar(chartData, 'Submitter-id');
+            drawChart(chartData, query_content, 'Submitter-id');
+            if(qd.showCecInfo){
+                createCECInfoKeyValueTable(data, query_content, 'Submitter-id');
+            } else{
+                createKeyValueTable(data, query_content, 'Submitter-id')
+            }
+        },
+        "de_manager": function () {
+//            qd.single.tabIndex = 3;
+            var data = gourpBy(Data["bugDetailList"], "de_manager");
+            var chartData = mapToObjects(data);
+
+            var query_content = $("#query_content");
+            emptyTools();
+            createToolBar(chartData, 'DE-manager');
+            drawChart(chartData, query_content, 'DE-manager');
+            if(qd.showCecInfo){
+                createCECInfoKeyValueTable(data, query_content, 'DE-manager');
+            } else{
+                createKeyValueTable(data, query_content, 'DE-manager');
+            }
+        },
+        "Engineer": function () {
+//            qd.single.tabIndex = 4;
+            var data = gourpBy(Data["bugDetailList"], "engineer");
+            var chartData = mapToObjects(data);
+            var query_content = $("#query_content");
+            emptyTools();
+            createToolBar(chartData, 'Engineer');
+            drawChart(chartData, query_content, 'Engineer');
+            if(qd.showCecInfo){
+                createCECInfoKeyValueTable(data, query_content, 'Engineer');
+            } else{
+                createKeyValueTable(data, query_content, 'Engineer');
+            }
+        },
+        "Found": function () {
+//            qd.single.tabIndex = 5;
+            var data = gourpBy(Data["bugDetailList"], "found");
+            var chartData = mapToObjects(data);
+            emptyTools();
+            var query_content = $("#query_content");
+            createToolBar(chartData, 'Found');
+            drawChart(chartData, query_content, 'Found');
+            createKeyValueTable(data, query_content, 'Found');
+        },
+        "Status": function () {
+//            qd.single.tabIndex = 6;
+            var data = gourpBy(Data["bugDetailList"], "status");
+            var chartData = mapToObjects(data);
+            emptyTools();
+            var query_content = $("#query_content");
+            createToolBar(chartData, 'Status');
+            drawChart(chartData, query_content, 'Status');
+            createKeyValueTable(data, query_content, 'Status');
+        }
+    };
+    var gourpBy = function (data, key) {
+        var distinguishList = {};
+        $.each(data, function (i, ele) {
+            if (distinguishList[ele[key]]) {
+                distinguishList[ele[key]] += 1;
+            }
+            else {
+                distinguishList[ele[key]] = 1;
+            }
+        });
+        return distinguishList;
+    };
+    var toKeyMapList = function (data, t) {
+        var list = [];
+        $.each(data, function (key, data) {
+            var filter;
+            if (key != '') {
+                filter = "and " + t + ":" + key;
+            } else {
+                filter = "minus " + t + "~.*";
+            }
+            list.push({
+                "name": key,
+                "value": data,
+                "filter": filter
+            });
+        });
+        return list;
+    };
+    var SeverityRes = ["Catastrophic", "Severe", "Moderate", "Minor", "Cosmetic", "Enhancement"];
+    var toSeverityStatus = function (data) {
+        var table_ss = [
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+        ];
+        $.each(data, function (i, ele) {
+            var e = table_ss[parseInt(ele["severity"]) - 1];
+            if (e) {
+                if (e[ele["status"]]) {
+                    e[ele["status"]] += 1;
+                } else {
+                    if (ele["status"] != '') {
+                        e[ele["status"]] = 1;
+                    }
+
+                }
+            }
+        });
+        $.each(table_ss, function (i, ele) {
+            var sum = 0;
+            $.each(table_ss[i], function (i, val) {
+                sum += val;
+            });
+            table_ss[i]["total"] = sum;
+            table_ss[i]["title"] = SeverityRes[i];
+            table_ss[i]["severity"] = (i + 1) + '-' + SeverityRes[i];
+            table_ss[i]["filter"] = " and Severity:" + (i + 1);
+        });
+
+
+        return table_ss;
+
+    };
+    var createCECInfoKeyValueTable = function (data, parent, t) {
+        var c = $("<div id='tableView'></div>");
+        c.hide().append("<img src='${base}/images/loading.gif' alt=''/>").css("text-align", "center");
+        $(parent).append(c);
+        var tableData = toKeyMapList(data, t);
+        var cecList = [];
+        $.each(tableData, function (i, ele) {
+            cecList.push(ele["name"]);
+        });
+        var isneedtoKillAjax = true;// set this true
+        setTimeout(function () {
+            checkAjaxKill();
+        }, 10000);// 10 seconds
+        var checkAjaxKill = function () {
+            if (isneedtoKillAjax) {
+                myAjaxCall.abort();
+                c.remove();
+                createKeyValueTable(data, parent, t, true);
+            }
+        };
+        var myAjaxCall = $.post("${base}/jsonp/user_info", {
+            "request": JSON.stringify(cecList)
+        }, function (cecInfo) {
+            isneedtoKillAjax = false;
+            if (isSelected(t)) {
+                handleData(cecInfo);
+            }
+        }, "json");
+
+        var handleData = function (cecInfo) {
+
+            $.each(tableData, function (i, ele) {
+                ele["city"] = cecInfo[i]["city"];
+                ele["prettyName"] = cecInfo[i]["prettyName"];
+                ele["manager"] = cecInfo[i]["manager"];
+                ele["detailUrl"] = cecInfo[i]["detailUrl"];
+            });
+            var tbl = $('<table class="tbl"></table>');
+            var funVal = function () {
+                return "<td><a target='_blank' href='" + qd.qddts_query_url + query + " {filter}" + "'>{value}</a></td>";
+            };
+            var funTotal = function () {
+                return "<th><a target='_blank' href='" + qd.qddts_query_url + query + "'>{value}</a></th>";
+            };
+            var funNullFilterStr = function (val) {
+                return val == '' ? "Not Specified" : val;
+            };
+            var funUndefinedFilterStr = function (val) {
+                return val && val != '' ? val : "Unknown";
+            };
+            var funNullFilterNumber = function (val) {
+                return val == '' ? 0 : val;
+            };
+            var fucCec = function () {
+                return "<td><a fullname='{prettyName}' target='_blank' href='{detailUrl}')'>{prettyName}</a></td>"
+            };
+            var funCity = function () {
+                return "<td>{city}</td>";
+            };
+            var funManager = function () {
+                return "<td>{manager}</td>"
+            };
+            var no_display = function () {
+                return "<th>-</th>";
+            };
+            tbl.renderTable(tableData, ["value", "filter", "prettyName", "manager", "city", "detailUrl"],
+                    [fucCec, funCity, funManager, funVal],
+                    [ funNullFilterNumber, funNullFilterStr, funNullFilterStr, funUndefinedFilterStr, funUndefinedFilterStr, funUndefinedFilterStr]);
+            tbl.renderTableHeader([t, "City", "Manager", "Defects"]);
+            var footTotal = function () {
+                return "<th>Total</th>"
+            };
+
+            tbl.renderTableFooter(tableData, ["value"], [footTotal, no_display, no_display, funTotal]);
+
+            c.empty();
+            c.append(tbl);
+            // support sort as number
+            // can not be filter
+            tbl.find("thead th:last").addClass("ui-tableFilter-number")
+                    .addClass("ui-tableFilter-inner").addClass("ui-tableFilter-no-filter");
+            // support sort in a
+            tbl.find("thead th:first").addClass("ui-tableFilter-innerAttr")
+                    .attr("sort_attr_name", "fullname").addClass("ui-tableFilter-no-filter");
+            // update total when filter is done
+
+            tbl.tableFilter({dialog: {modal: false}}, function (table, rows) {
+                var sum = 0;
+                $.each(rows, function (i, ele) {
+                    sum += Number($(ele).find("td:last a").html());
+                });
+                table.find("tfoot th:last").html(sum);
+                resize();
+            });
+            resize();
+//            qd.handleView();
+        };
+    };
+    var createKeyValueTable = function (data, parent, t, flag) {
+        var tableData = toKeyMapList(data, t);
+
+        var tbl = $('<table class="tbl"></table>');
+        var funVal = function () {
+            return "<td><a target='_blank' href='" + qd.qddts_query_url + query + " {filter}" + "'>{value}</a></td>";
+        };
+        var funTotal = function () {
+            return "<td><a target='_blank' href='" + qd.qddts_query_url + query + "'>{value}</a></td>";
+        };
+        var funNullFilterStr = function (val) {
+            return val == '' ? "Not Specified" : val;
+        };
+        var funNullFilterNumber = function (val) {
+            return val == '' ? 0 : val;
+        };
+        tbl.renderTable(tableData, ["name", "value", "filter"], [function () {
+            return "<td>{name}</td>"
+        }, funVal], [funNullFilterStr, funNullFilterNumber, funNullFilterStr]);
+        tbl.renderTableHeader([t, "Defects"]);
+        tbl.renderTableFooter(tableData, ["value"], [function () {
+            return "<td>Total</td>"
+        }, funTotal]);
+        var c = $("<div id='tableView'></div>");
+        c.append(tbl);
+        if (!flag) {
+            c.hide();
+        }
+
+        $(parent).append(c);
+        resize();
+//        qd.handleView();
+    };
+    var attachSeverityStatusTable = function (parent, dataList,hasData) {
+        var tbl = $('<table class="tbl"></table>');
+        var StatusRes = 'A,C,D,F,H,I,J,M,N,O,P,R,S,U,V,W'.split(',');
+        var templateArr = [];
+        $.each(StatusRes, function (i, ele) {
+            templateArr.push(function () {
+                return "<td><a target='_blank' href=\"" + qd.qddts_query_url + query + "{filter} and Status:" + ele + "\">{" + ele + "}</a></td>"
+            })
+        });
+        var valueTemplateArr = [];
+        $.each(StatusRes, function (i, ele) {
+            valueTemplateArr.push(function (value) {
+                if (value) {
+                    return value;
+                }
+                return 0;
+            })
+        });
+        var valueFunc = function (value) {
+            return value
+        };
+        var tempTotal = function () {
+            return "<td><a target='_blank' href=\"" + qd.qddts_query_url + query + "{filter}\">{total}</a></td>"
+        };
+        var varArr = [valueFunc, valueFunc, valueFunc].concat(valueTemplateArr).concat(valueFunc);
+        var tableTemplateArr = [function () {
+            return "<td title='{title}'>{severity}</td>"
+        }].concat(templateArr).concat(tempTotal);
+
+        tbl.renderTable(dataList, ["severity", "title", "filter"].concat(StatusRes).concat("total"), tableTemplateArr, varArr);
+        tbl.renderTableHeader(["Severity"].concat(StatusRes).concat("Total"));
+        tbl.renderTableFooter(dataList, StatusRes.concat("total"), [function () {
+            return "<td>Total</td>"
+        }].concat(templateArr).concat(tempTotal), valueTemplateArr.concat(valueFunc));
+        if(hasData){
+            tbl = fixTable(tbl);
+        }
+        parent.append(tbl);
+
+    };
+    var fixTable = function (tbl) {
+        var links = tbl.find("tfoot td a");
+        for (var i = links.length - 1; i >= 0; i--) {
+            if ($(links[i]).html() == '0') {
+                var td = $(links[i]).parent();
+                var col = td.parent().children("td").index(td);
+                tbl.find("thead tr th:eq(" + col + ")").remove();
+                var trs = tbl.find("tbody tr");
+                $.each(trs, function (i, tr) {
+                    $(tr).find("td:eq(" + col + ")").remove();
+                });
+                tbl.find("tfoot tr td:eq(" + col + ")").remove();
+            }
+
+        }
+        return tbl;
+    };
+
+    var handleBugs = function (data) {
+        Data = data;
+        showGroup('tab');
+        setUpTabs();
+//        qd.handleTab();
+    };
+
+######start########
+    var query = "$setting.criterias.get(0).advancedQuery";
+    $.getJSON(qd.qddts_cache_info.QDDTS_CACHE_SERVER_PATH_FULL + "?callback=?"
+            , {
+                "query": query
+            }, function (data) {
+                handleBugs(data);
+            }
+    );
+};
+//qd.handleTab = function () {
+//    if (qd.single.tabIndex != 1) {
+////        console.log(qd.single.tabIndex);
+//        $("#projects a:eq(" + qd.single.tabIndex + ")").click();
+//    }
+//};
+//qd.handleView = function () {
+//    if (qd.single.view == 'table') {
+//        $("a[t=table]").click();
+//    }
+//};
+//qd.initOptions();
+qd.init = function () {
+    $("#query_content").empty().append("<img src=\"${base}/images/loading.gif\" alt=\"\"/>");
+    $("#query_info").empty();
+    $("#tools").empty()
+}
+qd.refresh = function () {
+    var query = "$setting.criterias.get(0).advancedQuery";
+    var handleRefresh = function (data) {
+        qd.showSingle();
+    };
+    qd.init();
+    $.getJSON(qd.qddts_cache_info.QDDTS_CACHE_SERVER_PATH_FULL_REFRESH + "?callback=?"
+            , {
+                "query": query
+            }, function (data) {
+                handleRefresh(data);
+            }
+    );
+}
+qd.showSingle();
+
+
+</script>
+<div id="content" style="text-align: center">
+    <div id="projects">
+        <a class="left sel" t="tab">Table</a>
+        <a t="Component">Component</a>
+        <a t="Submitter">Submitter</a>
+        <a t="de_manager">DE-manager</a>
+        <a t="Engineer">Engineer</a>
+        <a t="Found">Found</a>
+        <a class="right" t="Status">Status</a>
+    </div>
+    <div id="tools" style="margin-bottom: 1px">
+
+    </div>
+    <div id="query_content">
+        <img src="${base}/images/loading.gif" alt=""/>
+    </div>
+
+    <div id="query_info" style="margin-top: 10px">
+
+    </div>
+</div>

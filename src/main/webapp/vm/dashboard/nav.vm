@@ -1,0 +1,438 @@
+#* @vtlvariable name="dashboard"     type="com.webex.qd.vo.Dashboard" *#
+#* @vtlvariable name="allDashboards"     type="java.util.List<com.webex.qd.vo.Dashboard>" *#
+#* @vtlvariable name="user"     type="com.webex.qd.vo.User" *#
+#* @vtlvariable name="principal"     type="org.springframework.security.ldap.userdetails.InetOrgPerson" *#
+#* @vtlvariable name="base"     type="java.lang.String" *#
+#* @vtlvariable name="admin"     type="boolean" *#
+
+<div id="nav_cc">
+    <div class="help">
+        <a title="help" href="http://wikicentral.cisex.com/display/PROJECT/CCATG+Quality+Dashboard" target="_blank"></a>
+    </div>
+
+    #if($principal)
+        <div class="menu">
+            <a href="javascript:void(0);" class="wbx" title="System Menu"></a>
+        </div>
+    #end
+
+    <div class="search icon-search" style="border: 0;">
+        <input type="text" class="txt" id="search_box"/>
+        <a href="javascript:void(0)" class="close icon-remove"></a>
+    </div>
+
+    <div id="nav_cotainer">
+        #parse("partial/nav_items.vm")
+    </div>
+</div>
+
+
+
+
+
+
+## drop down menus
+#if($principal)
+<div id="dropdown_menu" class="my-dropdown-menu settings-menu">
+    <ul>
+        <li>
+            <a href="javascript:void(0)" class="add_dashboard" title="add dashboard"></a>
+            <a href="javascript:void(0)" class="edit_dashboard_names" title="edit dashboards"></a>
+            #if($admin == true)
+                <a href="javascript:void(0)" class="workspace_manager" title="workspace manager"></a>
+            #end
+        </li>
+    </ul>
+</div>
+#end
+
+
+
+
+
+<script language="javascript">
+function add_sub_menu() {
+    $(".tooltip").remove();
+
+    $(".downarrow").each(function() {
+        var t = $(this);
+//        if(t.attr('grp') == 0) return;
+
+        var dbid = $(this).attr('dbid');
+
+        $.get('${base}/dashboard/get_sub_dbs/' + dbid , function(data) {
+            var dbs = eval('(' + data + ')');
+
+            if(dbs.length == 0) return;
+
+            var cont = t.Tooltip('up', 'loading');
+            cont.html('');
+            $.each(dbs, function(i, val) {
+                var db = $('<a href="./' + val.id + '" class="sub_item">' + val.name + '</a>');
+                cont.append(db);
+            })
+        });
+    });
+}
+
+function onload() {
+##########################################################
+## add sub menu tooltip
+    add_sub_menu();
+
+
+## clear text button
+    $("#search_box").bind('keyup blur focus', function(e) {
+        var txt = $(this).val();
+        if(txt == '') {
+            $(this).parent().find(".close").css('visibility', 'hidden');
+        } else {
+            $(this).parent().find(".close").css('visibility', 'visible');
+        }
+    });
+
+
+    $("#search_box").parent().find(".close").click(function(e) {
+        $("#search_box").val('');
+        $(this).css('visibility', 'hidden');
+    });
+
+##########################################################
+## highlight current navigation item
+    try {
+        var dbid = $dashboard.id;
+        var lis = $("ol.nav").find("a[dbid=" + dbid + "]");
+        $(lis.get(0)).parent().addClass("sel");
+    } catch (e) {}
+
+
+
+##########################################################
+## menu expand/collapse animation
+    function locateMenu(menu, menuController) {
+        var off = menuController.offset();
+        if (menu.width() < menuController.width()) {
+            menu.css('min-width', (menuController.width() + 15) + 'px');
+        }
+        menu.css('visibility', 'visible');
+        menu.css('top', (off.top + menuController.height() + 1) + 'px');
+        menu.css('left', (off.left - menu.outerWidth() + menuController.outerWidth() + 1) + 'px');
+    }
+
+    function findMenuForController(menuController) {
+
+    }
+
+    var menu_hide_timer = null;
+
+    $("#nav_cc").find("div.menu:last").hover(
+            function () {
+                var item = $(this);
+                var menu = $("#dropdown_menu");
+                item.addClass("sel");
+                locateMenu(menu, item);
+            },
+            function () {
+                var _this = $(this);
+                menu_hide_timer = setTimeout(function () {
+                    _this.removeClass("sel");
+                    $("#dropdown_menu").css('visibility', 'hidden');
+                }, 200);
+            });
+
+    $("#dropdown_menu").hover(function() {
+        if(!!menu_hide_timer) clearTimeout(menu_hide_timer);
+    }, function() {
+        $("#nav_cc").find("div.menu:last").removeClass("sel");
+        $(this).css('visibility', 'hidden');
+    });
+
+
+    #if($principal)
+
+    ##########################################################
+    ## show dashboard manage dialog
+        $("li>a.conf").click(function() {
+            showDialog("Dashboard Management");
+            var cont = $("#dialog_cc").find(".content");
+            $.get("${base}/widget/getdb2", function(data) {
+                cont.html(data);
+            });
+        });
+
+    #end
+
+##########################################################
+## search dashboard by project code
+    $("#search_box").autocomplete({
+        source: function(req, resp) {
+            if(proj_codes != null) {
+                var ret = [];
+
+                $.each(proj_codes, function(idx, val) {
+                    if(val.toLowerCase().indexOf(req.term.toLowerCase()) != -1) ret.push(val);
+                });
+
+                resp(ret);
+            } else {
+                $.get("${base}/dashboard/projcodes", function(data) {
+                    proj_codes = data;
+                    var ret = [];
+                    $.each(proj_codes, function(idx, val) {
+                        if(val.toLowerCase().indexOf(req.term.toLowerCase()) != -1) ret.push(val);
+                    });
+                    resp(ret);
+                }, "json");
+            }
+        }
+    });
+
+
+##########################################################
+## search dashboards
+    $("#search_box").keyup(function(e) {
+        var val = $(this).val();
+        val = $.trim(val);
+
+        if(e.which == 13 && val != '') {
+            showDialog("Search Results For: " + $(this).val());
+
+            var cont = $("#dialog_cc").find(".content");
+            $.get('${base}/dashboard/search_db', {key: val}, function(data) {
+                cont.html(data);
+            });
+        }
+    });
+
+
+##########################################################
+## nav bar click event handler
+    #if($principal)
+        $("li>a.add_dashboard").click(function() {
+            showDialog("Create New Dashboard");
+            var cont = $("#dialog_cc").find(".content");
+            cont.html('');
+            $.get('${base}/dashboard/add_db_panel', function(data) {
+                cont.html(data);
+            });
+        });
+
+        $("#nav_cc").click(function(e) {
+            var el = $(e.target);
+
+        ## add dashboard
+            if (el.attr("id") == "add_new_dashboard") {
+
+                showDialog("Create New Dashboard");
+                var cont = $("#dialog_cc").find(".content");
+
+                cont.html('');
+
+                $.get('${base}/dashboard/add_db_panel', function(data) {
+                    cont.html(data);
+                });
+            }
+
+
+            ## toggle favorite
+            else if(el.hasClass("fav")) {
+                var b = confirm("unsubscribe this dashboard?");
+                if(!b) return;
+
+                var dbid = el.parent().attr("dbid");
+                toggle_fav(dbid);
+            }
+
+
+            ## delete dashboard
+            else if(el.hasClass("del")) {
+                var b = confirm("delete this dashboard?");
+                if(!b) return;
+
+                var dbid = el.parent().attr("dbid");
+                del_db(dbid);
+            }
+        });
+    #end
+
+    function showAddWidgetDialog() {
+        showDialog("Add New Widget",625);
+        var cont = $("#dialog_cc").find(".content");
+        cont.html('');
+        $.get('${base}/dashboard/widget_panel', function(data) {
+            cont.html(data);
+        });
+    }
+
+    function showCopyDashBoard() {
+        showDialog("Copy Current DashBoard",625);
+        var cont = $("#dialog_cc").find(".content");
+        cont.html('');
+        $.get('${base}/dashboard/copy_db_panel', function(data) {
+            cont.html(data);
+        });
+    }
+
+##########################################################
+## add widget
+    #if($principal)
+        $("li>a.add_widget").click(function () {
+            showAddWidgetDialog();
+        });
+    #end
+
+
+##########################################################
+## owner manage
+    #if($principal && $admin)
+        $("li>a.user").click(function () {
+            showDialog("Add / Remove Dashboard Administrators");
+            var cont = $("#dialog_cc").find(".content");
+
+            cont.html('');
+
+            $.get('${base}/dashboard/user_panel', function(data) {
+                cont.html(data);
+            });
+
+        });
+
+    #else
+        $("li>a.member").click(function () {
+            showDialog("Add / Remove Dashboard Member");
+            var cont = $("#dialog_cc").find(".content");
+
+            cont.html('');
+
+            $.get('${base}/dashboard/user_panel', function (data) {
+                cont.html(data);
+            });
+        });
+    #end
+
+
+####
+    #if($principal)
+        $("li>a.edit_dashboard_names").click(function () {
+            showDialog("Edit Dashboards");
+            var cont = $("#dialog_cc").find(".content");
+
+            cont.html('');
+
+            $.get('${base}/dashboard/edit_db_names', function (data) {
+                cont.html(data);
+            });
+        });
+    #end
+}
+    #if($principal)
+    $("li>a.workspace_manager").click(function () {
+        showDialog("Workspace Manager");
+        var cont = $("#dialog_cc").find(".content");
+
+        cont.html('');
+
+        $.get('${base}/dashboard/workspace_manager', function (data) {
+            cont.html(data);
+        });
+    });
+    #end
+
+
+    #if($principal)
+    function update_nav_bar() {
+        if ($.isNumeric(dbid)) {
+            $.get('${base}/dashboard/get_nav_bar', {id:dbid}, function (data) {
+                $("#nav_cotainer").html(data);
+            });
+        } else {
+            $.get('${base}/dashboard/get_nav_bar', function (data) {
+                $("#nav_cotainer").html(data);
+            });
+        }
+        $('html').on('click.dropdown.data-api', $.fn.clearMenus);
+        $('body').on('click.dropdown.data-api', '[data-toggle="dropdown"]', toggle);
+    }
+
+
+
+    function toggle_fav(_dbid, foo) {
+        $.get('${base}/dashboard/toggle_fav', {dbid: _dbid}, function (apiResult) {
+            if (apiResult.success) {
+                update_nav_bar();
+                if (!!foo) try {
+                    foo()
+                } catch (e) {
+                }
+            } else {
+                alert('add favorite failed');
+            }
+        }, "json");
+    }
+
+    function del_db(_dbid,foo) {
+        $.get('${base}/dashboard/del_db', {dbid: _dbid}, function (ret) {
+            if (ret['statusCode'] == 0) {
+                update_nav_bar();
+                if(!!foo) foo();
+            } else {
+                if(ret.ext && ret.ext.errMsg)
+                    alert(ret.ext.errMsg);
+                else
+                    alert('delete failed.');
+            }
+        }, "json");
+    }
+
+    function addDashboard(name, columns, grpId) {
+        $.ajaxSetup({async: false});
+
+        $.post("${base}/dashboard/add_db", {'name': name, 'columns': columns, 'gid': grpId}, function (data) {
+
+            if (data["statusCode"] == 0) {
+                var id = data["ext"]["dbid"];
+
+                var url = window.location.href;
+
+                var nurl = url.replace(/\/([0-9]+)?$/, "/" + id);
+
+                window.location.href = nurl;
+
+            } else if (data["statusCode"] == -1) {
+                alert(data.ext.errMsg);
+            }
+        }, "json");
+    }
+
+    function copyDashboard(name, columns, grpId, dbId) {
+        $.ajaxSetup({async: false});
+
+        $.post("${base}/dashboard/copy_db", {'name': name, 'columns': columns, 'gid': grpId, 'dbid': dbId}, function (data) {
+
+            if (data["statusCode"] == 0) {
+                var id = data["ext"]["dbid"];
+
+                var url = window.location.href;
+
+                var nurl = url.replace(/\/([0-9]+)?$/, "/" + id);
+
+                window.location.href = nurl;
+
+            } else if (data["statusCode"] == -1) {
+                alert(data.ext.errMsg);
+            }
+        }, "json");
+    }
+    #end
+
+
+//if(window.myDomLoaded)
+
+//    onload();
+//else
+    $(document).ready(function () {
+        window.myDomLoaded = true;
+        onload();
+    });
+
+</script>

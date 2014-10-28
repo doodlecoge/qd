@@ -1,0 +1,389 @@
+#* @vtlvariable name="setting" type="com.webex.qd.widget.CdetsAccumulationWidget.Configuration" *#
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<link type="text/css" rel="stylesheet" href="${base}/css/common.css"/>
+<link type="text/css" rel="stylesheet" href="${base}/css/font-awesome.css"/>
+##<link type="text/css" rel="stylesheet" href="${base}/css/jquery.plugins.css"/>
+<style type="text/css">
+    #updated_on {
+
+        font-family: Arial;
+        font-size: 12px;
+        color: #666;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    .tbl {
+        border-collapse: separate;
+        table-layout: fixed;
+    }
+
+    .tbl td {
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+        text-align: left;
+    }
+
+    .tbl .sel {
+        background: #4B9FD5;
+        font-weight: bold;
+        color: #fff;
+    }
+
+    #projects {
+        padding: 5px 0;
+    }
+
+    #projects a {
+        display: -moz-inline-stack;
+        display: inline-block;
+        *display: inline;
+        zoom: 1;
+
+        font-family: Arial;
+        font-weight: bold;
+        font-size: 12px;
+        padding: 2px 8px;
+        border: 1px solid #ccc;
+        text-decoration: none;
+        color: #333;
+
+        background: #eee;
+        background: -webkit-gradient(linear, left top, left bottom, from(white), to(#E7E7E7));
+        background: -moz-linear-gradient(top, white, #E7E7E7);
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#FFFFFF', endColorstr='#E7E7E7');
+
+    }
+
+    #projects a:hover {
+        color: #efefef;
+
+        border: 1px solid #58a;
+        background: #5ad;
+        background: -webkit-gradient(linear, left top, left bottom, from(#7be), to(#5ad));
+        background: -moz-linear-gradient(top, #7be, #5ae);
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#77bbee', endColorstr='#55aadd');
+
+    }
+
+    #projects a.sel {
+        color: #333;
+
+        border: 1px solid #cc9933;
+        background: #cc9933;
+        background: -webkit-gradient(linear, left top, left bottom, from(#ffcc66), to(#cc9933));
+        background: -moz-linear-gradient(top, #ffcc66, #cc9933);
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffcc66', endColorstr='#cc9933');
+
+    }
+
+    #projects .left {
+        -webkit-border-radius: 5px 0 0 5px;
+        -moz-border-radius: 5px 0 0 5px;
+        border-radius: 5px 0 0 5px;
+    }
+
+    #projects .right {
+        -webkit-border-radius: 0 5px 5px 0;
+        -moz-border-radius: 0 5px 5px 0;
+        border-radius: 0 5px 5px 0;
+    }
+
+    #projects .left_right {
+        -webkit-border-radius: 5px;
+        -moz-border-radius: 5px;
+        border-radius: 5px;
+    }
+
+
+    .ref_success {
+        color: darkgreen;
+        font-weight: bold;
+    }
+
+    .ref_fail {
+        color: #f66;
+        font-weight: bold;
+    }
+</style>
+
+<script src="${base}/script/jquery172.js" type="text/javascript"></script>
+<script src="${base}/script/common.js" type="text/javascript"></script>
+<script src="${base}/script/highstock.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+Highcharts.setOptions({
+    global: {
+        useUTC: false
+    }
+});
+
+
+var msADay = 1000 * 60 * 60 * 24;
+function showTrends(idx) {
+    idx = typeof idx == 'number' ? idx : 0;
+
+    var series = [];
+
+    var xhr = $.ajax({
+        url: '${base}/widget/cdets/acc',
+        data: {
+            wid: $widget.id,
+            idx: idx
+        },
+        dataType: 'text',
+        cache: false
+    });
+
+    xhr.done(function (data) {
+        data = eval('(' + data + ')');
+
+//
+
+        if (data.error) {
+            $("#cont").find('div:first').html('Please wait while querying.');
+            $("#updated_on")
+                    .html('<b>Query</b>: ' + data.query)
+                    .attr('title', data.query);
+        } else {
+
+            var timeLapse = data.timeLapse;
+
+            var timeStr = getTimeString(timeLapse);
+
+            var str = '<i style="cursor: pointer;" class="icon-refresh ref" title="click to refresh" onclick="return ref(this);"></i>' +
+                    '&nbsp;<b>Updated</b>: ' + timeStr;
+            str += ',&nbsp;&nbsp;<b>Query</b>: ' + data.query;
+            $("#updated_on")
+                    .html(str)
+                    .attr('title', data.query);
+
+            var trendData = data.data;
+            var qddtsData = eval('(' + data.data + ')');
+            var highChartsData = [
+                [],
+                [],
+                []
+            ];
+
+            $.each(qddtsData, function (idx, val) {
+                highChartsData[0].push([val[0], val[1]]);
+                highChartsData[1].push([val[0], val[2]]);
+                highChartsData[2].push([val[0], val[3]]);
+            });
+
+
+            var s;
+
+            s = {};
+            s.name = 'Outstanding Bug';
+            s.data = highChartsData[0];
+            s.type = 'spline';
+            series.push(s);
+
+
+            s = {};
+            s.name = 'Incoming Bug';
+            s.data = highChartsData[1];
+            s.type = 'spline';
+            series.push(s);
+
+            s = {};
+            s.name = 'Closed Bug';
+            s.data = highChartsData[2];
+            s.type = 'spline';
+            series.push(s);
+
+            show(series);
+        }
+
+        resize();
+    });
+
+    xhr.fail(function (data) {
+        var loc = location.href + '&t=' + (new Date() - 0);
+        $("#cont").find('div:first')
+                .html('Loading failed! <a href="' + loc + '">Reload</a>');
+    });
+}
+
+
+function getTimeString(ms) {
+    ms = parseInt(ms);
+    if(ms < 60000) {
+        return 'just now';
+    } else {
+        var str = '';
+        ms = parseInt(ms / 60000);
+        var m = ms % 60;
+        ms = parseInt(ms / 60);
+
+        str += ms == 0 ? '' : (ms + 'h');
+        if(ms * m != 0) str += ' & ';
+        str += m == 0 ? '' : (m + 'm');
+
+        return str + ' ago';
+
+    }
+}
+
+function show(series) {
+    var cont = $("#cont").find("div");
+    if (cont.length == 0) {
+        cont = $("<div></div>");
+        $("#cont").append(cont);
+    }
+
+    cont.html('');
+
+    cont.highcharts('StockChart', {
+        rangeSelector: {
+            selected: 0
+        },
+        legend: {
+            enabled: true,
+            verticalAlign: 'top'
+        },
+        series: series,
+        rangeSelector: {
+            buttons: [
+                {
+                    type: 'week',
+                    count: 1,
+                    text: '1w'
+                },
+                {
+                    type: 'month',
+                    count: 1,
+                    text: '1m'
+                },
+                {
+                    type: 'month',
+                    count: 3,
+                    text: '3m'
+                },
+                {
+                    type: 'month',
+                    count: 6,
+                    text: '6m'
+                },
+                {
+                    type: 'year',
+                    count: 1,
+                    text: '1y'
+                },
+                {
+                    type: 'all',
+                    count: 1,
+                    text: 'all'
+                }
+            ],
+            selected: 5,
+            inputEnabled: false
+        }
+    });
+}
+
+$(function () {
+    var btns = $("#projects").find('a[cls]');
+    var n = btns.length;
+
+    if (n == 1) {
+        btns.addClass('left_right');
+    } else if (n > 1) {
+        $(btns.get(0)).addClass('left');
+        $(btns.get(n - 1)).addClass('right');
+    }
+
+    $("#projects").click(function (e) {
+        var el = $(e.target);
+        if (!el.attr('cls')) return;
+        var idx = el.index();
+        showTrends(idx);
+
+        $("#projects").find('a[cls]').removeClass('sel');
+        el.addClass('sel');
+    });
+
+    $("#projects").find('a[cls]:first').click();
+
+    if ($('#projects').children('a[cls]').length == 0) {
+        $("#cont").find('div:first').html('No query, add some first!');
+    }
+});
+
+
+function ref(el) {
+    var idx = $("#projects").find('a.sel').index();
+    var xhr = $.ajax({
+        url: '${base}/widget/cdets/qddts_ref',
+        data: {
+            wid: $widget.id,
+            idx: idx
+        },
+        dataType: 'text',
+        cache: false
+    });
+
+    xhr.done(function (data) {
+        var msg = '';
+        var cls = '';
+        try {
+            var o = eval('(' + data + ')');
+            if(o.error) throw 'err';
+            msg = 'Request submitted!'
+            cls = 'ref_success';
+        } catch (e) {
+            msg = 'Error!'
+            cls = 'ref_fail';
+        }
+
+        $(el).html(msg).removeClass('icon-refresh').addClass(cls);
+        setTimeout((function (el) {
+            return function () {
+                $(el).addClass('icon-refresh').removeClass(cls).html('');
+            };
+        })($(el)), 2000);
+
+    });
+
+    xhr.fail(function (data) {
+        $(el).removeClass('icon-refresh').addClass('ref_fail').html('Error!');
+        setTimeout((function (el) {
+            return function () {
+                $(el).addClass('icon-refresh').removeClass('ref_fail').html('');
+            };
+        })($(el)), 2000);
+    });
+}
+</script>
+</head>
+<body style="padding: 0; margin: 0;">
+<div>
+    <div style="text-align: center;" id="projects">
+        #foreach($q in $setting.getQueries())<a href="javascript:;" cls='a'>$q.name</a>#end
+    </div>
+
+    <div id="cont">
+        <div style="text-align: center; font-size: 14px; font-family: Arial;">
+            <img src="${base}/images/loading.gif" alt=""/>
+        </div>
+    </div>
+
+    <div id="updated_on">
+    ##        <table class="tbl" style="width: 100%;">
+##            <tr>
+##                <td style="width: 200px;"></td>
+##                <td></td>
+##            </tr>
+##        </table>
+    </div>
+</div>
+</body>
+</html>

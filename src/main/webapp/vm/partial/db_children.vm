@@ -1,0 +1,351 @@
+#* @vtlvariable name="grpDb"     type="com.webex.qd.vo.Dashboard" *#
+#* @vtlvariable name="children"     type="java.util.List<com.webex.qd.vo.GroupDashboardEntry>" *#
+<input type="hidden" value="$grpDb.id" id="gid_in_editing" />
+
+<style type="text/css">
+    #search_db_txt_in_db_children {
+        width: 60%;
+    }
+
+
+    ul.ul_001 {
+        padding: 0;
+        margin: 0;
+    }
+
+    ul.ul_001 li {
+        list-style: none;
+        height: 25px;
+        line-height: 25px;
+        border-bottom: 1px solid #ccc;
+        position: relative;
+        padding-right: 5px;
+    }
+
+    ul.ul_001 li a.btn01 {
+        position: absolute;
+        right: 0;
+        top: 3px;
+        height: 14px;
+        line-height: 14px;
+    }
+
+    ul.ul_001 li:hover {
+        background: #eee;
+    }
+
+    ul.ul_001 li .del {
+        position: absolute;
+        right: 0;
+        height: 14px;
+        line-height: 14px;
+    }
+
+
+    ul.ul_001 li span.dis {
+        color: #ccc;
+    }
+
+    .handle {
+        background-image: url(../images/icons.png);
+        background-repeat: no-repeat;
+        background-position: -305px -3px;
+        height: 25px;
+        line-height: 25px;
+        width: 20px;
+        cursor: move;
+    }
+
+    .ph {
+        height: 25px;
+        line-height: 25px;
+        background: #ffa;
+    }
+
+
+    #db_name_txt {
+        outline: none;
+        border: 0;
+        background: transparent;
+        color: #f88;
+    }
+
+    #db_name_txt_container {
+        visibility: hidden;
+    }
+</style>
+
+<input type="text" id="search_db_txt_in_db_children" />
+
+<input type="hidden" id="search_db_hid_in_db_children"/>
+
+<a href="javascript:void(0)" class="btn01" id="add_in_db_children">Add</a>
+
+#if($children && $children.size() > 0)
+<ul class="ul_001">
+    #foreach($db in $children)
+        <li dbid="$db.id.dashboardId" ranc="$db.rank">
+            <span class="handle inline-block">&nbsp;</span>
+
+            #if($uid == $db.dashboard.uid)
+                <span class="txt">$db.dashboard.name</span>
+            #else
+                <span class="txt dis">$db.dashboard.name</span>
+            #end
+
+
+            <a href="javascript:void(0)" class="btn01 del">&times;</a>
+
+        </li>
+    #end
+</ul>
+#end
+<p>
+<a href="javascript:void(0)" class="btn01 save_ch_order">Save Order</a>
+<a href="javascript:void(0)" class="btn01 back">Back</a>
+    <span id="save_ch_db_order_msg" style="color: #006400; font-weight: bold;"></span>
+</p>
+
+<div id="db_name_txt_container">
+    <input id="db_name_txt" />
+</div>
+
+<script type="text/javascript">
+    $("#search_db_txt_in_db_children").autocomplete({
+        source: function (req, resp) {
+            if (!!window.dashboard_lst) {
+                var ret = [];
+
+
+                $.each(window.dashboard_lst, function (idx, val) {
+                    if (val.label.toLowerCase().indexOf(req.term.toLowerCase()) != -1) ret.push(val);
+                });
+
+                resp(ret);
+
+            } else {
+                $.get("${base}/dashboard/nongroup_dashboard_names", function (data) {
+                    window.dashboard_lst = data;
+                    var ret = [];
+
+                    $.each(window.dashboard_lst, function (idx, val) {
+                        if (val.label.toLowerCase().indexOf(req.term.toLowerCase()) != -1) ret.push(val);
+                    });
+
+                    resp(ret);
+                }, "json");
+            }
+        },
+
+        select: function(event, ui) {
+            $("#search_db_hid_in_db_children").val(ui.item.id);
+        },
+
+        close: function(event, ui) {
+            var id = $("#search_db_hid_in_db_children").val();
+            if(id == '') $("#search_db_txt_in_db_children").val('');
+            else {
+                var len = window.dashboard_lst.length;
+
+                for(var i = 0; i < len; i++) {
+                    if(window.dashboard_lst[i].id == id)
+                        $("#search_db_txt_in_db_children").val(window.dashboard_lst[i].label);
+                }
+            }
+        }
+    });
+
+    $("#search_db_txt_in_db_children").blur(function() {
+        var id = $("#search_db_hid_in_db_children").val();
+        var txt = $(this).val();
+        txt = $.trim(txt);
+
+        var len = window.dashboard_lst.length;
+
+        if(id == '' && txt == '') return;
+
+        for(var i = 0; i < len; i++) {
+            if(window.dashboard_lst[i].id == id || window.dashboard_lst[i].label == txt) {
+                $("#search_db_txt_in_db_children").val(window.dashboard_lst[i].label);
+                $("#search_db_hid_in_db_children").val(window.dashboard_lst[i].id);
+            }
+        }
+
+    });
+
+
+    $(".title .txt", "#dialog_cc").html('Manage Sub Dashboards For $grpDb.name');
+
+
+
+
+
+    $("ul.ul_001").sortable({
+        handle: ".handle",
+        cursor: "move",
+        placeholder: "ph",
+        appendTo: "parent"
+    });
+
+    $("ul.ul_001").disableSelection();
+
+    $(".btn01.back").click(function(e) {
+        if($entryType == 0){
+            $.get('${base}/dashboard/edit_db_names', function (data) {
+                $(".content", "#dialog_cc").html(data);
+                $(".title .txt", "#dialog_cc").html('EDIT DASHBOARD NAMES');
+            });
+        }
+        else
+        {
+            var cont = $("#dialog_cc").find(".content");
+
+            $.get('${base}/dashboard/public_db_manager', {wsId : $wsId}, function(data) {
+                cont.html(data);
+            });
+        }
+    });
+
+    $(".btn01.save").click(function(e) {
+        var gid = $("#gid_in_editing").val();
+        var cid = $("#search_db_hid_in_db_children").val();
+
+        $.get('${base}/dashboard/add_child_to_group', {gid:gid, cid:cid}, function (data) {
+            $(".content", "#dialog_cc").html(data);
+            $(".title .txt", "#dialog_cc").html('EDIT DASHBOARD NAMES');
+            update_nav_bar();
+        });
+    });
+
+
+    $("#add_in_db_children").click(function() {
+        var gid = $("#gid_in_editing").val();
+        var cid = $("#search_db_hid_in_db_children").val();
+
+        if(cid == '') {
+            alert('Child dashboard has not been entered!');
+            return;
+        }
+
+        $.get('${base}/dashboard/add_child_to_group', {gid:gid, cid:cid}, function (apiResult) {
+            if(apiResult.success) {
+
+                $.get('${base}/dashboard/group_manage_panel', {grpId: gid,workspaceId:"0",type:0}, function(data) {
+                    $('.content', '#dialog_cc').html(data);
+                });
+                update_nav_bar();
+            } else {
+                alert(apiResult.statusMessage);
+            }
+        }, "json")
+                .fail(function() {
+                    alert('Add failed!');
+                });
+    });
+
+
+    $("ul.ul_001").click(function(e) {
+        var el = $(e.target);
+
+        if(el.hasClass('del')) {
+            var gid = $("#gid_in_editing").val();
+            var cid = el.parent().attr('dbid');
+
+
+            $.get('${base}/dashboard/remove_child_from_group', {gid:gid, cid:cid}, function(apiResult) {
+                if(apiResult.success) {
+                    $.get('${base}/dashboard/group_manage_panel', {grpId: gid,workspaceId:"0",type:0}, function(data) {
+                        $('.content', '#dialog_cc').html(data);
+                    });
+                    update_nav_bar();
+                } else {
+                    alert(apiResult.statusMessage);
+                }
+            }, "json");
+        } else if(el.hasClass('txt')) {
+            if(el.hasClass('dis')) return;
+
+            var val = el.html();
+
+            var ipt = $('#db_name_txt');
+            ipt.val(val);
+
+            ipt.insertAfter(el);
+            ipt.show().focus();
+            el.hide();
+        }
+    });
+
+
+    $('#db_name_txt').blur(function(e) {
+        var _this = $(this);
+
+        var li = _this.parent();
+        var txt = li.find(".txt");
+
+        txt.show();
+        _this.hide();
+
+    });
+
+
+    $('#db_name_txt').keypress(function(e) {
+        if( e.which != 8 && e.which != 37 && e.which != 39 && e.which != 0 && e.which != 32 && e.which != 13
+                && (e.which < 48 || e.which > 57 && e.which < 65 || e.which > 90 && e.which < 97 || e.which > 122)) {
+            return false;
+        }
+
+        if(e.which != 13) return;
+
+        var _this = $(this);
+
+        var val = $.trim(_this.val());
+        if(val == '') return;
+
+        var li = _this.parent();
+        var dbid = li.attr('dbid');
+
+        $.post('chg_db_name', {id: dbid, name: val}, function(data) {
+            var o = eval('(' + data + ')');
+
+            if(o.id) {
+                li.find(".txt").html(o.name);
+                _this.blur();
+                update_nav_bar();
+            }
+        });
+
+    });
+
+
+    $(".save_ch_order").click(function() {
+        var ids = get_ch_db_order();
+        var gid = $("#gid_in_editing").val();
+
+        $.get('${base}/dashboard/save_groupdashboard_orders', {gid:gid,ids:ids.join(",")}, function(apiResult){
+            if(apiResult.success) {
+                $.get('${base}/dashboard/group_manage_panel', {grpId: gid,workspaceId:"0",type:0}, function(data) {
+                    $('.content', '#dialog_cc').html(data);
+
+                    $("#save_ch_db_order_msg").html('Order Saved Successfully');
+
+                    setTimeout(function() {
+                        $("#save_ch_db_order_msg").html('');
+                    }, 2000);
+                });
+                update_nav_bar();
+            } else {
+                alert(apiResult.statusMessage);
+            }
+        }, "json");
+    });
+
+
+    function get_ch_db_order() {
+        var ids = [];
+        $(".ul_001").children("li").each(function() {
+            ids.push($(this).attr('dbid'));
+        });
+        return ids;
+    }
+</script>

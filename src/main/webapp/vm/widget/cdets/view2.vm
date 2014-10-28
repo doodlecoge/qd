@@ -1,0 +1,54 @@
+#* @vtlvariable name="setting"                type="com.webex.qd.widget.CdetsWidget.Configuration" *#
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <link type="text/css" rel="stylesheet" href="${base}/css/common.css"/>
+    <link type="text/css" rel="stylesheet" href="${base}/css/sort_tbl.css"/>
+    <style type="text/css">
+        table td {
+            text-align: center;
+        }
+
+        .tbl .selcol {
+            background: #fc9;
+        }
+    </style>
+
+    <script src="${base}/script/jquery172.js" type="text/javascript"></script>
+    <script src="${base}/script/common.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        $(function () {
+            $.get("cdets_data_provider", {widgetId: 300, index: 1},function (d) {
+                alert(d)
+            }, "txt")
+                    .fail(function () {
+
+                    });
+            $.get("cdets_data_provider", {widgetId: 300, index: 2},function (d) {
+                alert(d)
+            }, "txt")
+                    .fail(function () {
+
+                    });
+        });
+    </script>
+</head>
+<body style="padding: 0; margin: 0;">
+    #if($setting.criterias.size() == 0)
+    <div style="height: 100px; line-height: 100px; text-align: center;">
+        Please Edit Widget Settings First.
+    </div>
+    #else
+    <div>
+        <div id="loading" style="height: 150px; line-height: 150px; text-align: center;">
+            <img src="../images/loading.gif" alt="" />
+        </div>
+
+        <div id="content" style="text-align: center;">
+        </div>
+    </div>
+    #end
+</body>
+</html>

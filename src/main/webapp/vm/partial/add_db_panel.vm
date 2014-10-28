@@ -1,0 +1,99 @@
+<style type="text/css">
+    .req {
+        color: #ff4500;
+        font-weight: bold;
+    }
+</style>
+<p>
+    <span class="req">*</span>Dashboard Name:
+    <br/>
+    <input type="text" id="db_name" class="txt" style="width: 80%;"/>
+    <br/>
+    <span id="name_require" class="req" style="display: none;"></span>
+</p>
+
+<p>
+    <input type="checkbox" id="chk"/><label for="chk">This is a Dashboard Group.</label>
+</p>
+
+<p id="parent_db_grp">
+    Add this dashboard to one of your Dashboard Groups:
+    <br/>
+    <input type="text" id="db_grp_select" class="txt" style="width: 80%;"/>
+    <br/>
+    <span style="color:green; font-weight: bold;" id="db_grp_select_txt">
+        (type to search your dashboard groups)
+    </span>
+    <input type="hidden" id="db_grp_select_hid"/>
+</p>
+
+<a href="javascript:void(0)" class="btn01 inline-block" id="add_dashboard_btn">Create Dashboard</a>
+
+<script type="text/javascript">
+    $("#chk").click(function () {
+        var $this =
+        $(this);
+        var b = $this.is(':checked');
+        if (b) {
+            $("#parent_db_grp").hide();
+        } else {
+            $("#parent_db_grp").show();
+        }
+    });
+
+
+    var parent_db_groups = null;
+
+    $("#db_grp_select").autocomplete({
+        source: function (req, resp) {
+            if (parent_db_groups != null) {
+                var ret = [];
+
+                $.each(parent_db_groups, function (idx, val) {
+                    if (val.label.toLowerCase().indexOf(req.term.toLowerCase()) != -1) ret.push(val);
+                });
+
+                resp(ret);
+            } else {
+                $.get("${base}/dashboard/list_groups", function (data) {
+                    parent_db_groups = eval('(' + data + ')');
+
+                    var ret = [];
+
+                    $.each(parent_db_groups, function (idx, val) {
+                        if (val.label.toLowerCase().indexOf(req.term.toLowerCase()) != -1) ret.push(val);
+                    });
+
+                    resp(ret);
+                });
+            }
+        },
+        select: function (event, ui) {
+            $("#db_grp_select").val('');
+            $("#db_grp_select_hid").val(ui.item.id);
+            $("#db_grp_select_txt").html(ui.item.label);
+            return false;
+        }
+    });
+    $("#add_dashboard_btn").click(function () {
+        var gid = $("#db_grp_select_hid").val();
+        var isGrp = $("#chk").is(':checked');
+        var name = $.trim($("#db_name").val());
+
+        if (name == '') {
+            $("#name_require").show(500).html('dashboard name is required');
+            return;
+        }
+
+        if(!name.match(/^[.\-_0-9A-Za-z ]+$/)) {
+            $("#name_require").show(500).html('only numeric,character,blank space and underscore');
+            return;
+        }
+
+        if(gid == '') gid = 0;
+
+        if(isGrp) gid = -1;
+
+        addDashboard(name, 2, gid);
+    });
+</script>

@@ -1,0 +1,137 @@
+#* @vtlvariable name="setting" type="com.webex.qd.widget.ProductDifferWidget.Configuration" *#
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <link type="text/css" rel="stylesheet" href="${base}/css/jquery-ui-1.8.22.custom.css" />
+    <link type="text/css" rel="stylesheet" href="${base}/css/common.css" />
+    <link type="text/css" rel="stylesheet" href="${base}/css/jquery.plugins.css" />
+
+    <script type="text/javascript" src="${base}/script/jquery172.js"></script>
+    <script type="text/javascript" src="${base}/script/jquery-ui-1.8.22.custom.min.js"></script>
+    <script type="text/javascript" src="${base}/script/common.js"></script>
+    <script type="text/javascript" src="${base}/script/jquery.plugins.js"></script>
+
+
+    <style type="text/css">
+        body {
+            font-size: 62.5%;
+            padding: 0;
+            margin: 0;
+        }
+
+        body * {
+            font-family: "Courier New", Arial;
+        }
+
+        form * {
+            font-size: 1em;
+        }
+
+        form {
+            font-size: 1.2em;
+        }
+
+        form input {
+            padding: 0.2em;
+            outline: none;
+        }
+
+        form ul {
+            padding: 0 5px;
+            margin: 0;
+        }
+        form ul li {
+            list-style: none;
+            padding-bottom: 20px;
+        }
+
+        form ul li span {
+            color: #0D5995;
+            font-weight: bold;
+        }
+
+        .ui-autocomplete {
+            max-height: 100px;
+            overflow-y: auto;
+        }
+    </style>
+
+    <script type="text/javascript">
+        function split(val) {
+            return val.split(/,\s*/);
+        }
+
+        function last(val) {
+            return split(val).pop();
+        }
+
+        function getSettings() {
+            var config = {};
+            config.name = $.trim($("#name").val());
+            var els = $("#project_codes").BulkInput('items');
+            var pcs = $.map(els, function(el, i) {
+                return $(el).data('val').text;
+            });
+            config.project_codes = pcs;
+            return config;
+        }
+
+
+        $(function() {
+            $("form input:text").addClass("text")
+                    .addClass("ui-corner-all")
+                    .addClass("ui-widget-content");
+
+            var bipt = $('#project_codes');
+            bipt.BulkInput();
+
+            var pcs = $project_codes;
+            var pcstr = "$setting.createCommaDelimitedProjectCodes()";
+
+            var selPcs = null;
+            if($.trim(pcstr) != "") selPcs = pcstr.split(",");
+
+
+            if(selPcs) {
+                $.each(selPcs, function(i, v) {
+                    bipt.BulkInput('add', v);
+                });
+            }
+
+            bipt.BulkInput('option', 'on-added', function() {
+                resizeIfrmSize("setting");
+            });
+
+            bipt.BulkInput('source', pcs);
+
+            resizeIfrmSize("setting");
+        });
+    </script>
+
+
+</head>
+
+<body>
+<form onsubmit="return false;">
+    <ul>
+        <li>
+            <span>Widget Name:</span><br />
+            <input id="name" name="name" value='$name' style="width: 90%;" />
+        </li>
+
+
+        <li>
+            <span>Project Codes:</span><br />
+            <div id="project_codes" style="padding: 5px;border:1px solid #ccc;border-radius: 6px">
+
+            </div>
+##            <input id="multi_ipt" name="multi_ipt" style="width: 90%" value="$config.getProjectCodes()"/>
+        </li>
+    </ul>
+
+    <div style="height: 100px"></div>
+</form>
+</body>
+</html>
